@@ -37,7 +37,18 @@ ROWS.forEach(r=>{ [8.5,20,31.5,68.5,80,91.5].forEach(x=>SEATS.push({x, y:r.y, w:
 const SPOT = {x:50, y:77.5, w:24};
 
 let devotees = [], congduc = 0; const boardMap = new Map(), usedNames = new Set();
-const SPRITES = ["https://chua-online-phucvjps-projects.vercel.app/assets/dev-woman.webp", "https://chua-online-phucvjps-projects.vercel.app/assets/dev-man.webp"];
+/* Avatar types: comment one word (nam / nữ / sư / ni / bà / tiểu / cao tăng)
+   to change your devotee's form — borrowed from the community temple idea. */
+const AVATARS = { woman: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-woman.webp", man: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-man.webp",
+                  monk: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-monk.webp", nun: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-nun.webp",
+                  elder: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-elder.webp", child: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-child.webp" };
+const AVATAR_WORDS = { "nam": "man", "nữ": "woman", "nu": "woman", "sư": "monk", "su": "monk",
+                       "ni": "nun", "bà": "elder", "ba": "elder", "tiểu": "child", "tieu": "child",
+                       "cao tăng": "monk", "cao tang": "monk" };
+const AVATAR_LABEL = { man: "phật tử nam", woman: "phật tử nữ", monk: "sư thầy",
+                       nun: "sư cô", elder: "bà", child: "tiểu đồng" };
+const lastWish = new Map();    /* viewer's latest comment — read back as hồi hướng on their gift */
+const likeThrottle = new Map();
 
 function pickName(){
   const free = NAMES.filter(n=>!usedNames.has(n));
@@ -153,19 +164,38 @@ function pumpSpeech(){
   speechSynthesis.speak(u);
 }
 if("speechSynthesis" in window) speechSynthesis.getVoices();
-function speak(text){
-  if(!voiceOn || !("speechSynthesis" in window)) return;
+function speakBrowser(text){
+  if(!("speechSynthesis" in window)) return;
   speechQ.push(text);
   while(speechQ.length > 2) speechQ.shift();
   pumpSpeech();
 }
+/* Server voice (Edge TTS — Vietnamese neural voice) when the page is served
+   by a bridge, cloud or PC: much better Vietnamese than most phone voices.
+   Any failure falls back to the browser voice. */
+const ttsQ = []; let ttsPlaying = false;
+function pumpTts(){
+  if(ttsPlaying || !ttsQ.length) return;
+  const text = ttsQ.shift(); ttsPlaying = true;
+  const a = new Audio("/tts?text=" + encodeURIComponent(text));
+  a.onended = ()=>{ ttsPlaying = false; pumpTts(); };
+  a.onerror = ()=>{ ttsPlaying = false; speakBrowser(text); pumpTts(); };
+  a.play().catch(()=>{ ttsPlaying = false; speakBrowser(text); pumpTts(); });
+}
+function speak(text){
+  if(!voiceOn) return;
+  if(LIVE_MODE && !PHONE_MODE){ ttsQ.push(text); while(ttsQ.length > 2) ttsQ.shift(); pumpTts(); }
+  else speakBrowser(text);
+}
 function showThanks(dev, gift){
   const b = $("#thanksBanner"), bless = BLESSINGS[blessIdx++ % BLESSINGS.length];
+  const wish = lastWish.get(dev.name) || "";
   $("#thanksTitle").textContent = `🙏 Cảm ơn ${dev.name}`;
-  $("#thanksSub").textContent = `đã dâng ${gift.name.toLowerCase()} · ${gift.act} — ${bless}`;
+  $("#thanksSub").textContent = `đã dâng ${gift.name.toLowerCase()} · ${gift.act} — ${bless}` +
+    (wish ? ` · Hồi hướng lời nguyện của ${dev.name}: “${wish}”` : "");
   b.classList.remove("show"); void b.offsetWidth; b.classList.add("show");
   clearTimeout(b._t); b._t = setTimeout(()=>b.classList.remove("show"), 4200);
-  return bless;
+  return { bless, wish };
 }
 function toggleFs(){
   if(document.fullscreenElement){ document.exitFullscreen && document.exitFullscreen().catch(()=>{}); return; }
@@ -183,7 +213,7 @@ $("#btnMusic").addEventListener("click", e=>{
 $("#btnVoice").addEventListener("click", e=>{
   voiceOn = !voiceOn;
   e.currentTarget.classList.toggle("off", !voiceOn);
-  if(!voiceOn && "speechSynthesis" in window){ speechSynthesis.cancel(); speechQ.length = 0; speaking = false; }
+  if(!voiceOn && "speechSynthesis" in window){ speechSynthesis.cancel(); speechQ.length = 0; ttsQ.length = 0; speaking = false; }
 });
 
 /* ---------- fx helpers ---------- */
@@ -216,14 +246,15 @@ function makeDev(name, seat, instant){
     <div class="chip" style="--av:${av}"><span class="ava">${name.trim()[0]}</span><span class="cname">${name}</span><span class="cpts"></span></div>
     <div class="shadow"></div><img alt="" draggable="false">`;
   const img = el.querySelector("img");
-  img.src = SPRITES[Math.floor(Math.random()*SPRITES.length)];
+  const type = Math.random() < .5 ? "woman" : "man";
+  img.src = AVATARS[type];
   img.style.animationDelay = (Math.random()*3)+"s";
   el.style.zIndex = seat.z;
   el.style.width = seat.w+"%";
   el.style.left = (instant ? seat.x : 50)+"%";
   el.style.top = (instant ? seat.y : 106)+"%";
   floorLayer.appendChild(el);
-  const dev = {name, seat, el, bubble: el.querySelector(".bubble"), chip: el.querySelector(".chip"),
+  const dev = {name, seat, el, img, type, scale: 1, bubble: el.querySelector(".bubble"), chip: el.querySelector(".chip"),
                cpts: el.querySelector(".cpts"), home:{x:seat.x, y:seat.y, w:seat.w}, busy:false, lastAct: Date.now()};
   seat.taken = dev; devotees.push(dev);
   el.addEventListener("click", e=>{ e.stopPropagation(); bow(dev); say(dev, "Mô Phật 🙏"); sndPop(); });
@@ -242,7 +273,7 @@ function perform(dev, fn, holdMs=1400){
   if(!dev){ fn && fn(null); return; }
   if(dev.busy){ fn && fn(dev); return; }
   dev.busy = true; dev.el.classList.add("spot"); dev.el.style.zIndex = 30;
-  dev.el.style.left = SPOT.x+"%"; dev.el.style.top = SPOT.y+"%"; dev.el.style.width = SPOT.w+"%";
+  dev.el.style.left = SPOT.x+"%"; dev.el.style.top = SPOT.y+"%"; dev.el.style.width = (SPOT.w * (dev.scale || 1))+"%";
   setTimeout(()=>{
     fn && fn(dev); bow(dev);
     setTimeout(()=>{
@@ -305,6 +336,12 @@ function handleJoin(name){
   const existing = devotees.find(d=>d.name===name);
   if(existing) return existing;
   let seat = SEATS.find(s=>!s.taken);
+  if(!seat && SEATS.length < 30){
+    /* hall expansion: one extra back row (24 -> 30 seats) before anyone is evicted */
+    [8.5,20,31.5,68.5,80,91.5].forEach(x=>SEATS.push({x, y:75.5, w:13, z:4, taken:null}));
+    seat = SEATS.find(s=>!s.taken);
+    if(seat) ticker("Chùa mở thêm hàng ghế phía sau — mời các sen vào lễ 🙏");
+  }
   if(!seat){ evictOldest(); seat = SEATS.find(s=>!s.taken); if(!seat) return null; }
   return makeDev(name, seat, false);
 }
@@ -314,6 +351,44 @@ function handleChat(dev, text){
   bow(dev); say(dev, text || PRAYERS[Math.floor(Math.random()*PRAYERS.length)], text ? 5400 : 4200);
 }
 function findOrJoin(name){ return devotees.find(d=>d.name===name) || handleJoin(name); }
+/* Change a devotee's form (avatar) — monk / nun / elder / child / lay. */
+function setAvatar(dev, type){
+  if(!dev) return;
+  if(dev.type === type){ bow(dev); return; }
+  dev.type = type; dev.scale = type === "child" ? .74 : 1;
+  dev.img.src = AVATARS[type];
+  dev.home.w = dev.seat.w * dev.scale;
+  if(!dev.busy) dev.el.style.width = dev.home.w + "%";
+  for(let i=0;i<5;i++)
+    setTimeout(()=>spawnFx("✨", dev.home.x + (Math.random()*10-5), dev.home.y - dev.home.w * .8, "floatUp", 1100, 16), i*90);
+  bow(dev);
+}
+/* All live chat flows through here: one-word comments change the sender's
+   avatar (an exact whole-comment match, so "Nam mô A Di Đà Phật" is safe);
+   anything else is remembered as their wish and shown as a speech bubble. */
+function routeChat(name, txt){
+  if(!txt) return;
+  const key = txt.trim().toLowerCase().replace(/\s+/g, " ");
+  const dev = findOrJoin(name); if(!dev) return;
+  if(AVATAR_WORDS[key]){
+    setAvatar(dev, AVATAR_WORDS[key]);
+    ticker(`${name} hóa thân thành ${AVATAR_LABEL[AVATAR_WORDS[key]]} 🙏`);
+    return;
+  }
+  lastWish.set(name, txt.trim().slice(0, 90));
+  handleChat(dev, cleanText(txt));
+}
+/* Likes: hearts float above the liker's own devotee (if seated). */
+function handleLike(name){
+  const dev = devotees.find(d=>d.name===name && !d.leaving); if(!dev) return;
+  const now = Date.now();
+  if(now - (likeThrottle.get(name) || 0) < 4000) return;
+  likeThrottle.set(name, now);
+  dev.lastAct = now;
+  const cx = dev.home.x, cy = dev.home.y - dev.home.w * 1.32;
+  for(let i=0;i<3;i++)
+    setTimeout(()=>spawnFx("❤️", cx + (Math.random()*7-3.5), cy, "floatUp", 1500 + Math.random()*500, 16 + Math.random()*6), i*170);
+}
 function ringBell(big){
   const b = $("#bell");
   b.classList.remove("ring"); void b.offsetWidth; b.classList.add("ring");
@@ -331,8 +406,13 @@ function handleGift(dev, gift, ptsOverride){
   congduc += effPts;
   boardMap.set(dev.name, (boardMap.get(dev.name)||0) + effPts);
   updateTop(); renderBoard(); flashChip(dev, effPts);
-  const bless = showThanks(dev, gift);
-  if(effPts >= 20) speak(`Cảm ơn ${dev.name} đã dâng ${gift.name}. ${bless.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").trim()}`);
+  const th = showThanks(dev, gift);
+  if(effPts >= 20){
+    const clean = s => s.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").trim();
+    speak(th.wish
+      ? `Cảm ơn ${dev.name} đã dâng ${gift.name}. Hồi hướng lời nguyện của ${dev.name}: ${clean(th.wish).slice(0, 90)}. ${clean(th.bless)}`
+      : `Cảm ơn ${dev.name} đã dâng ${gift.name}. ${clean(th.bless)}`);
+  }
   ticker(`${dev.name} tặng ${gift.icon} ${gift.name} · ${gift.act.toLowerCase()}`);
   const FX = {
     incense(){ $("#burnerGlow").classList.add("big"); smokeBurst(13); sndChime();
@@ -470,7 +550,8 @@ async function connectEuler(){
       const name = cleanName(u.nickname || u.displayId || u.uniqueId || d.uniqueId);
       if(!name) continue;
       if(type === "WebcastMemberMessage"){ const dv = handleJoin(name); if(dv) ticker(`${name} vừa vào lễ 🙏`); }
-      else if(type === "WebcastChatMessage"){ const dv = findOrJoin(name); if(dv && d.comment) handleChat(dv, cleanText(d.comment)); }
+      else if(type === "WebcastChatMessage"){ if(d.comment) routeChat(name, d.comment); }
+      else if(type === "WebcastLikeMessage"){ handleLike(name); }
       else if(type === "WebcastSocialMessage"){
         if(String(d.displayText || d.label || "").toLowerCase().includes("follow") || d.action === 3){
           const dv = handleJoin(name); if(dv) ticker(`${name} vừa follow chùa 🙏`);
@@ -551,9 +632,10 @@ function connectTikTool(){
     if(type.includes("member") || type === "join"){ const dv = handleJoin(name); if(dv) ticker(`${name} vừa vào lễ 🙏`); }
     else if(type.includes("chat") || type === "comment"){
       const txt = d.comment || d.text || d.content;
-      const dv = findOrJoin(name); if(dv && txt) handleChat(dv, cleanText(txt));
+      if(txt) routeChat(name, txt);
     }
     else if(type.includes("follow")){ const dv = handleJoin(name); if(dv) ticker(`${name} vừa follow chùa 🙏`); }
+    else if(type.includes("like")){ handleLike(name); }
     else if(type.includes("gift")){
       if(d.giftType === 1 && d.repeatEnd === false) return;
       const dv = findOrJoin(name); if(!dv) return;
@@ -578,7 +660,8 @@ function connectLive(){
     let m; try{ m = JSON.parse(ev.data); }catch(e){ return; }
     const name = cleanName(m.name); if(!name) return;
     if(m.type === "join"){ const d = handleJoin(name); if(d) ticker(`${name} vừa vào lễ 🙏`); }
-    else if(m.type === "chat"){ const d = findOrJoin(name); if(d && m.text) handleChat(d, cleanText(m.text)); }
+    else if(m.type === "chat"){ if(m.text) routeChat(name, m.text); }
+    else if(m.type === "like"){ handleLike(name); }
     else if(m.type === "follow"){ const d = handleJoin(name); if(d) ticker(`${name} vừa follow chùa 🙏`); }
     else if(m.type === "gift"){
       const d = findOrJoin(name); if(!d) return;
@@ -642,6 +725,28 @@ if(LIVE_MODE){
     }
     devotees.filter(d=>!d.busy && !d.leaving && now - d.lastAct > 4 * 60 * 1000).forEach(removeDev);
   }, 20000);
+  /* Periodic peaceful verse: a soft bell, a blessing line on the banner,
+     and the voice reads it aloud — keeps a quiet hall feeling alive. */
+  const VERSES = [
+    "Nam mô A Di Đà Phật. Chúc các sen tâm an, nhà an.",
+    "Một nén hương lòng, cầu cho cha mẹ bình an, mạnh khỏe.",
+    "Buông xuống muộn phiền, giữ tâm nhẹ như mây chiều.",
+    "Cầu cho người thương của các sen luôn được bình an che chở.",
+    "Tâm tĩnh thì sóng yên, lòng an thì nhà ấm.",
+    "Mỗi ngày một việc thiện, phước lành tự tìm về bên mình."
+  ];
+  let verseIdx = 0;
+  setInterval(()=>{
+    if(document.hidden || !devotees.some(d=>!d.leaving)) return;
+    const line = VERSES[verseIdx++ % VERSES.length];
+    const b = $("#thanksBanner");
+    $("#thanksTitle").textContent = "📿 Lời kinh an lành";
+    $("#thanksSub").textContent = line;
+    b.classList.remove("show"); void b.offsetWidth; b.classList.add("show");
+    clearTimeout(b._t); b._t = setTimeout(()=>b.classList.remove("show"), 6500);
+    ringBell(false);
+    speak(line);
+  }, 390000);
   if(PHONE_MODE && !QS.get("user")){
     const u = prompt("Nhập username TikTok của bạn (không có @):", "");
     if(u){ location.search = "?phone=1&user=" + encodeURIComponent(u.replace(/^@/, "")) + (QS.get("key") ? "&key=" + encodeURIComponent(QS.get("key")) : ""); }

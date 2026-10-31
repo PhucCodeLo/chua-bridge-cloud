@@ -15,6 +15,32 @@ const WWW = path.join(__dirname, "www");
 const DEFAULT_USER = (process.env.TIKTOK_USER || "cuocsongvuituoihehe").replace(/^@/, "");
 const EULER_KEY = process.env.EULER_API_KEY || "";
 
+/* ---------- Giọng đọc Edge TTS (tiếng Việt neural, miễn phí) ----------
+   Trang chùa gọi GET /tts?text=... để đọc lời cảm ơn + lời kinh bằng giọng
+   vi-VN-HoaiMyNeural (đổi giọng qua biến TTS_VOICE). Có cache theo nội dung.
+   Nếu thư viện/giọng đọc lỗi, endpoint trả 502 và trang tự dùng giọng dự phòng. */
+let MsEdgeTTS = null, TTS_FORMAT = null;
+try { const m = require("msedge-tts"); MsEdgeTTS = m.MsEdgeTTS; TTS_FORMAT = m.OUTPUT_FORMAT; }
+catch (e) { console.log("[TTS] msedge-tts chưa sẵn sàng:", e.message); }
+const TTS_VOICE = process.env.TTS_VOICE || "vi-VN-HoaiMyNeural";
+const ttsCache = new Map();
+async function ttsMp3(text) {
+  if (!MsEdgeTTS) throw new Error("tts unavailable");
+  if (ttsCache.has(text)) return ttsCache.get(text);
+  const tts = new MsEdgeTTS();
+  await tts.setMetadata(TTS_VOICE, TTS_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+  const { audioStream } = tts.toStream(text);
+  const buf = await new Promise((resolve, reject) => {
+    const chunks = [];
+    audioStream.on("data", c => chunks.push(c));
+    audioStream.on("end", () => resolve(Buffer.concat(chunks)));
+    audioStream.on("error", reject);
+  });
+  if (ttsCache.size > 40) ttsCache.clear();
+  ttsCache.set(text, buf);
+  return buf;
+}
+
 let tiktok = { user: null, conn: null, state: "idle", roomId: null, lastError: "" };
 let stopTimer = null;
 
@@ -22,6 +48,15 @@ const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "
                ".jpg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml" };
 const server = http.createServer((req, res) => {
   const p = decodeURIComponent(req.url.split("?")[0]);
+  if (p === "/tts") {
+    const text = (new URL(req.url, "http://x").searchParams.get("text") || "").slice(0, 220).trim();
+    if (!text) { res.writeHead(400); return res.end(); }
+    ttsMp3(text).then(buf => {
+      res.writeHead(200, { "Content-Type": "audio/mpeg", "Cache-Control": "no-store" });
+      res.end(buf);
+    }).catch(e => { console.log("[TTS]", e.message); res.writeHead(502); res.end(); });
+    return;
+  }
   if (p === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ ok: true, clients: wss.clients.size,
@@ -73,6 +108,13 @@ async function startTikTok(user) {
   conn.on(WebcastEvent.MEMBER, d => broadcast({ type: "join", name: userName(d) }));
   conn.on(WebcastEvent.CHAT, d => broadcast({ type: "chat", name: userName(d), text: d.comment || "" }));
   conn.on(WebcastEvent.FOLLOW, d => broadcast({ type: "follow", name: userName(d) }));
+  const likeAt = new Map();
+  conn.on(WebcastEvent.LIKE, d => {
+    const name = userName(d); const now = Date.now();
+    if (now - (likeAt.get(name) || 0) < 5000) return;   /* tim bay tối đa 5s/lần/người */
+    likeAt.set(name, now);
+    broadcast({ type: "like", name });
+  });
   conn.on(WebcastEvent.GIFT, d => {
     if (d.giftType === 1 && !d.repeatEnd) return;
     const ext = d.extendedGiftInfo || {};
