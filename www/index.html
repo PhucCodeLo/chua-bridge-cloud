@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Chùa Online · TikTok LIVE v0.9.4</title>
+<title>Chùa Online · TikTok LIVE v1.0.0</title>
 <meta name="description" content="Chùa online phong cách điện ảnh: điện thờ thật, phật tử áo tràng vào lễ, tặng quà thắp hương thỉnh chuông qua TikTok LIVE.">
 <link rel="stylesheet" href="style.css?v=25">
 <link rel="manifest" href="manifest.webmanifest">
@@ -15,6 +15,7 @@
 
   <!-- ================= STAGE 2.5D ================= -->
   <main id="stage">
+    <div id="world">
     <div id="bgWrap">
       <img id="bgTop" src="https://chua-online-phucvjps-projects.vercel.app/assets/backdrop-top.jpg" alt="">
       <img id="bgBot" src="https://chua-online-phucvjps-projects.vercel.app/assets/backdrop-bot.jpg" alt="">
@@ -40,10 +41,14 @@
       <circle cx="299" cy="26" r="3.5" fill="#7a2d00"/>
       <path d="M292 14 L286 2 M302 15 L306 3" stroke="#ffd94d" stroke-width="4" stroke-linecap="round"/>
     </svg>
+    </div><!-- /#world -->
+
+    <div class="couplet left" id="coupL">Đây là nơi thanh tịnh</div>
+    <div class="couplet right" id="coupR">Vui lòng đi nhẹ nói khẽ</div>
 
     <header id="topbar">
       <div class="title">Chùa Online</div>
-      <div class="sub">🙏 <b id="devCount">0</b> phật tử đang lễ &nbsp;✦&nbsp; Công đức: <b id="congduc">0</b> &nbsp;✦&nbsp; <span class="ver">v0.9.4</span></div>
+      <div class="sub">🙏 <b id="devCount">0</b> phật tử đang lễ &nbsp;✦&nbsp; Công đức: <b id="congduc">0</b> &nbsp;✦&nbsp; <span class="ver">v1.0.0</span></div>
     </header>
 
     <!-- thank-you banner when a gift arrives -->
@@ -119,6 +124,6 @@
     Khi nối TikTok thật, các nút giả lập được thay bằng event vào phòng / comment / quà thật từ LIVE — nhạc và giọng cảm ơn chạy chung trên máy phát, trộn thẳng vào luồng live.</p>
   </section>
 </div>
-<script src="app.js?v=27"></script>
+<script src="app.js?v=28"></script>
 </body>
 </html>

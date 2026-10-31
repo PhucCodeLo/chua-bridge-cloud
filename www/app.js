@@ -375,6 +375,20 @@ function flashChip(dev, pts){
   dev.chip.classList.add("gold");
   clearTimeout(dev._ct); dev._ct = setTimeout(()=>{ dev.chip.classList.remove("gold"); dev.cpts.textContent = ""; }, 3000);
 }
+/* Camera: on a gift, the whole hall zooms to the devotee at the offering
+   spot for a close-up deep prostration, then zooms back out (like the big
+   temple lives). At most one zoom every 9s so gifts do not fight over it. */
+let camBusy = false, lastZoomAt = 0;
+function zoomTo(dev){
+  const st = $("#stage"), w = $("#world"); if(!st || !w) return;
+  const W = st.clientWidth, H = st.clientHeight; if(!W || !H) return;
+  const wPct = SPOT.w * (dev.scale || 1);
+  const k = Math.min(3.4, Math.max(2.1, 30 / wPct));
+  const figH = (wPct / 100 * W) * 1.18;
+  const cx = SPOT.x / 100 * W, cy = SPOT.y / 100 * H - figH * .45;
+  w.style.transform = `translate(${W * .5 - cx * k}px, ${H * .58 - cy * k}px) scale(${k})`;
+}
+function zoomOut(){ const w = $("#world"); if(w) w.style.transform = ""; }
 function perform(dev, fn, holdMs=1400){
   if(!dev){ fn && fn(null); return; }
   if(dev.busy){ fn && fn(dev); return; }
@@ -384,12 +398,16 @@ function perform(dev, fn, holdMs=1400){
   setTimeout(()=>{
     dev.el.classList.remove("walking"); renderFig(dev);
     fn && fn(dev); bow(dev);
+    for(let i=0;i<5;i++) spawnFx("🌸", 24+Math.random()*52, 4+Math.random()*8, "fallDown", 2600+Math.random()*900, 19);
+    const doZoom = !camBusy && Date.now() - lastZoomAt > 9000;
+    if(doZoom){ camBusy = true; lastZoomAt = Date.now(); zoomTo(dev); dev.el.classList.add("prostrate"); }
     setTimeout(()=>{
+      if(doZoom){ zoomOut(); dev.el.classList.remove("prostrate"); setTimeout(()=>{ camBusy = false; }, 1400); }
       dev.el.classList.add("walking"); renderFig(dev);
       dev.el.style.left = dev.home.x+"%"; dev.el.style.top = dev.home.y+"%"; dev.el.style.width = dev.home.w+"%";
       setTimeout(()=>{ dev.el.classList.remove("walking"); renderFig(dev);
         dev.busy = false; dev.el.classList.remove("spot"); dev.el.style.zIndex = dev.seat.z; }, 1750);
-    }, holdMs);
+    }, holdMs + (doZoom ? 2300 : 0));
   }, 1750);
 }
 
@@ -888,3 +906,15 @@ if(TEST_MODE && $("#testPanel")){
   $("#btnTestVerse").addEventListener("click", ()=>showVerse());
   $("#btnTestBow").addEventListener("click", ()=>bowAll());
 }
+
+/* Rotating couplet banners on the two pillars (verses change every 14s). */
+const COUPLETS = [["Đây là nơi thanh tịnh", "Vui lòng đi nhẹ nói khẽ"],
+                  ["Sống không giận không hờn", "Sống không oán không trách"],
+                  ["Gieo hạt giống thiện lành", "Gặt quả ngọt bình an"]];
+let coupIdx = 0;
+setInterval(()=>{ const L = $("#coupL"), R = $("#coupR"); if(!L || !R) return;
+  L.classList.add("flip"); R.classList.add("flip");
+  setTimeout(()=>{ coupIdx = (coupIdx + 1) % COUPLETS.length;
+    L.textContent = COUPLETS[coupIdx][0]; R.textContent = COUPLETS[coupIdx][1];
+    L.classList.remove("flip"); R.classList.remove("flip"); }, 620);
+}, 14000);

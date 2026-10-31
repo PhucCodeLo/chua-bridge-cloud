@@ -176,3 +176,18 @@ body.overlay #giftMenu{display:none}
 body.overlay #phone{min-height:0}
 body.overlay #stage{max-height:none;height:100dvh;aspect-ratio:auto}
 @media (max-width:380px){#board{width:96px}#topbar .title{font-size:20px}.tier .tn{display:none}}
+
+/* ===== v1.0.0: camera world, couplets, deep prostration ===== */
+#world{position:absolute;inset:0;transform-origin:0 0;transition:transform 1.3s cubic-bezier(.65,.02,.23,1)}
+.couplet{position:absolute;top:15%;width:7.4%;min-width:27px;height:46%;z-index:6;writing-mode:vertical-rl;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  background:linear-gradient(180deg,#a31621,#7d0f18);color:#ffd94d;border:1px solid #caa25a;border-radius:6px;
+  font-weight:800;font-size:clamp(10px,2.9vw,15px);letter-spacing:.22em;padding:10px 0;
+  box-shadow:0 4px 14px rgba(0,0,0,.5), inset 0 0 12px rgba(0,0,0,.35);transition:opacity .6s, transform .6s}
+.couplet.left{left:1.3%}.couplet.right{right:1.3%}
+.couplet.flip{opacity:0;transform:scaleX(.55)}
+.dev.prostrate .fig{animation:prostrate 2.4s ease-in-out !important}
+@keyframes prostrate{0%,100%{transform:translateY(0) scale(1,1)}
+  32%,58%{transform:translateY(3.5%) scale(1.07,.58)}
+  76%{transform:translateY(1%) scale(1.02,.85)}}
+#board{border:1px solid rgba(202,162,90,.8);box-shadow:0 0 0 3px rgba(90,10,10,.5), 0 6px 18px rgba(0,0,0,.5)}
