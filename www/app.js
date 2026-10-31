@@ -36,10 +36,10 @@ const A = { buddha:{x:50,y:11}, burner:{x:50,y:57}, smoke:{x:50,y:50},
 const ROWS = [
   {y:47,   w:8,    z:3, xs:[29, 39, 61, 71]},
   {y:56,   w:9,    z:4, xs:[24, 34.5, 65.5, 76]},
-  {y:66,   w:10.5, z:5, xs:[21, 32.5, 44, 56, 67.5, 79]},
-  {y:76.5, w:12,   z:6, xs:[18.5, 30.5, 42.5, 54.5, 66.5, 78.5]},
-  {y:87,   w:14,   z:7, xs:[17, 30, 43, 56, 69, 82]},
-  {y:97.5, w:16,   z:8, xs:[15.5, 29, 42.5, 56, 69.5, 83]},
+  {y:67.5, w:10.5, z:5, xs:[20, 31, 42, 58, 69, 80]},
+  {y:75.5, w:12,   z:6, xs:[18.5, 30.5, 42.5, 54.5, 66.5, 78.5]},
+  {y:85,   w:14,   z:7, xs:[17, 30, 43, 56, 69, 82]},
+  {y:93.5, w:15.5, z:8, xs:[15.5, 29, 42.5, 56, 69.5, 83]},
 ];
 const SEATS = [];
 ROWS.forEach(r=>{ r.xs.forEach(x=>SEATS.push({x, y:r.y, w:r.w, z:r.z, taken:null})); });
@@ -64,18 +64,18 @@ function shade(hex, f){ const n = parseInt(hex.slice(1), 16);
   if(f >= 0){ r += (255-r)*f; g += (255-g)*f; b += (255-b)*f; } else { r *= 1+f; g *= 1+f; b *= 1+f; }
   return `rgb(${r|0},${g|0},${b|0})`; }
 function headSVG(c, type){
-  return `<ellipse cx="36.6" cy="26" rx="2.8" ry="4" fill="${SKIN}"/>
-    <ellipse cx="63.4" cy="26" rx="2.8" ry="4" fill="${SKIN}"/>
-    <circle cx="50" cy="25" r="13" fill="url(#hg${type})"/>
-    ${c.bald ? '<ellipse cx="45" cy="18" rx="4.5" ry="2.8" fill="rgba(255,255,255,.38)"/>' : ""}
-    ${c.bun ? `<circle cx="50" cy="10.5" r="5.5" fill="url(#hg${type})"/>` : ""}
-    ${c.pin ? '<circle cx="55.4" cy="8.6" r="1.7" fill="#f5c542"/>' : ""}`;
+  return `<ellipse cx="31.5" cy="33" rx="3" ry="4.5" fill="${SKIN}"/>
+    <ellipse cx="68.5" cy="33" rx="3" ry="4.5" fill="${SKIN}"/>
+    <circle cx="50" cy="32" r="17" fill="url(#hg${type})"/>
+    ${c.bald ? '<ellipse cx="43" cy="23" rx="5.5" ry="3.4" fill="rgba(255,255,255,.38)"/>' : ""}
+    ${c.bun ? `<circle cx="50" cy="13" r="6.5" fill="url(#hg${type})"/>` : ""}
+    ${c.pin ? '<circle cx="56.4" cy="11" r="1.9" fill="#f5c542"/>' : ""}`;
 }
 /* Devotee seen from above-behind (high-angle hall): big head, shoulders,
    shaded robe, praying arms rising in front and joining above the head. */
 function figureSVG(type){
   const c = TYPE_CONF[type] || TYPE_CONF.woman;
-  return `<svg viewBox="0 0 100 148" aria-hidden="true">
+  return `<svg viewBox="0 0 100 118" aria-hidden="true">
     <defs>
       <linearGradient id="rg${type}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${shade(c.robe, .22)}"/><stop offset=".45" stop-color="${c.robe}"/><stop offset="1" stop-color="${shade(c.robe, -.28)}"/>
@@ -84,15 +84,15 @@ function figureSVG(type){
         <stop offset="0" stop-color="${shade(c.bald ? "#e8b98d" : c.hair, .3)}"/><stop offset="1" stop-color="${c.bald ? SKIN : c.hair}"/>
       </radialGradient>
     </defs>
-    <path d="M50 30 C34 32 25 44 22 62 L26 122 C30 134 70 134 74 122 L78 62 C75 44 66 32 50 30Z" fill="url(#rg${type})" stroke="rgba(43,20,4,.30)" stroke-width="1.3"/>
-    <path d="M50 46 L50 126" stroke="rgba(0,0,0,.13)" stroke-width="2.5"/>
-    <path d="M33 60 C31 84 32 104 34 124 M67 60 C69 84 68 104 66 124" stroke="rgba(0,0,0,.10)" stroke-width="2" fill="none"/>
-    <path d="M30 47 C38 37 62 37 70 47" stroke="rgba(255,255,255,.20)" stroke-width="3" fill="none"/>
-    ${c.sash ? '<path d="M31 40 L73 75 L66 83 L27 50Z" fill="#a85b1e" opacity=".8"/>' : ""}
-    <path d="M29 54 C24 34 30 16 43 9" stroke="${c.arm}" stroke-width="10" fill="none" stroke-linecap="round"/>
-    <path d="M71 54 C76 34 70 16 57 9" stroke="${c.arm}" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <path d="M50 34 C33 36 24 48 21 66 L25 100 C29 110 71 110 75 100 L79 66 C76 48 67 36 50 34Z" fill="url(#rg${type})" stroke="rgba(43,20,4,.30)" stroke-width="1.3"/>
+    <path d="M50 50 L50 102" stroke="rgba(0,0,0,.13)" stroke-width="2.5"/>
+    <path d="M34 62 C32 78 33 90 35 102 M66 62 C68 78 67 90 65 102" stroke="rgba(0,0,0,.10)" stroke-width="2" fill="none"/>
+    <path d="M31 48 C39 39 61 39 69 48" stroke="rgba(255,255,255,.20)" stroke-width="3" fill="none"/>
+    ${c.sash ? '<path d="M30 42 L74 70 L68 78 L26 52Z" fill="#a85b1e" opacity=".8"/>' : ""}
+    <path d="M28 56 C22 36 28 18 42 10" stroke="${c.arm}" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <path d="M72 56 C78 36 72 18 58 10" stroke="${c.arm}" stroke-width="12" fill="none" stroke-linecap="round"/>
     ${headSVG(c, type)}
-    <ellipse cx="50" cy="6.5" rx="6" ry="8" fill="${SKIN}" stroke="rgba(0,0,0,.14)"/>
+    <ellipse cx="50" cy="8" rx="7" ry="9.5" fill="${SKIN}" stroke="rgba(0,0,0,.14)"/>
   </svg>`;
 }
 /* Standing/walking form for the high-angle view: narrower robe with a
@@ -100,7 +100,7 @@ function figureSVG(type){
    under the hem (CSS) plus the body bob on the wrapper. */
 function figureWalkSVG(type){
   const c = TYPE_CONF[type] || TYPE_CONF.woman;
-  return `<svg class="wfig" viewBox="0 0 100 148" aria-hidden="true">
+  return `<svg class="wfig" viewBox="0 0 100 118" aria-hidden="true">
     <defs>
       <linearGradient id="wg${type}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${shade(c.robe, .22)}"/><stop offset=".45" stop-color="${c.robe}"/><stop offset="1" stop-color="${shade(c.robe, -.28)}"/>
@@ -109,14 +109,14 @@ function figureWalkSVG(type){
         <stop offset="0" stop-color="${shade(c.bald ? "#e8b98d" : c.hair, .3)}"/><stop offset="1" stop-color="${c.bald ? SKIN : c.hair}"/>
       </radialGradient>
     </defs>
-    <g class="shoeL"><ellipse cx="41" cy="136" rx="7" ry="4" fill="#26221f"/></g>
-    <g class="shoeR"><ellipse cx="59" cy="136" rx="7" ry="4" fill="#26221f"/></g>
-    <path d="M50 30 C36 32 28 44 26 60 L29 110 C34 119 66 119 71 110 L74 60 C72 44 64 32 50 30Z" fill="url(#wg${type})" stroke="rgba(43,20,4,.28)" stroke-width="1.2"/>
-    <path d="M50 94 L50 112" stroke="${c.shade}" stroke-width="2.5"/>
-    ${c.sash ? '<path d="M32 38 L68 64 L62 71 L29 46Z" fill="#a85b1e" opacity=".85"/>' : ""}
-    <path d="M27 52 C22 70 23 88 27 100" stroke="${c.arm}" stroke-width="9" fill="none" stroke-linecap="round"/>
-    <path d="M73 52 C78 70 77 88 73 100" stroke="${c.arm}" stroke-width="9" fill="none" stroke-linecap="round"/>
-    <circle cx="27.5" cy="103" r="3.1" fill="${SKIN}"/><circle cx="72.5" cy="103" r="3.1" fill="${SKIN}"/>
+    <g class="shoeL"><ellipse cx="41" cy="112" rx="7" ry="4" fill="#26221f"/></g>
+    <g class="shoeR"><ellipse cx="59" cy="112" rx="7" ry="4" fill="#26221f"/></g>
+    <path d="M50 34 C36 36 28 47 26 63 L29 96 C34 104 66 104 71 96 L74 63 C72 47 64 36 50 34Z" fill="url(#wg${type})" stroke="rgba(43,20,4,.28)" stroke-width="1.2"/>
+    <path d="M50 84 L50 100" stroke="${c.shade}" stroke-width="2.5"/>
+    ${c.sash ? '<path d="M31 40 L69 62 L63 69 L28 48Z" fill="#a85b1e" opacity=".85"/>' : ""}
+    <path d="M26 54 C21 70 22 84 26 94" stroke="${c.arm}" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <path d="M74 54 C79 70 78 84 74 94" stroke="${c.arm}" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <circle cx="26.5" cy="97" r="3.2" fill="${SKIN}"/><circle cx="73.5" cy="97" r="3.2" fill="${SKIN}"/>
     ${headSVG(c, type)}
   </svg>`;
 }

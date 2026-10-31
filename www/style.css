@@ -71,8 +71,8 @@ body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sa
 .dev .shadow{position:absolute;left:50%;bottom:-2%;width:86%;height:7%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.5),transparent 70%)}
 .chip{position:absolute;left:50%;bottom:97%;transform:translateX(-50%);display:flex;align-items:center;gap:3px;
   background:rgba(12,6,2,.72);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:1px 6px 1px 1px;
-  font-size:9px;font-weight:700;white-space:nowrap;z-index:4;backdrop-filter:blur(1px);max-width:88px}
-.chip .cname{overflow:hidden;text-overflow:ellipsis;max-width:56px}
+  font-size:9px;font-weight:700;white-space:nowrap;z-index:4;backdrop-filter:blur(1px);max-width:68px}
+.chip .cname{overflow:hidden;text-overflow:ellipsis;max-width:40px}
 .chip .ava{width:13px;height:13px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:8px;color:#fff;background:var(--av,#888)}
 .chip .cpts{color:var(--gold2);font-size:9px;font-weight:800}
 .chip.gold{border-color:var(--gold);box-shadow:0 0 10px rgba(245,197,66,.65)}
