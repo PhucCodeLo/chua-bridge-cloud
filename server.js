@@ -24,18 +24,41 @@ try { const m = require("msedge-tts"); MsEdgeTTS = m.MsEdgeTTS; TTS_FORMAT = m.O
 catch (e) { console.log("[TTS] msedge-tts chưa sẵn sàng:", e.message); }
 const TTS_VOICE = process.env.TTS_VOICE || "vi-VN-HoaiMyNeural";
 const ttsCache = new Map();
-async function ttsMp3(text) {
-  if (!MsEdgeTTS) throw new Error("tts unavailable");
-  if (ttsCache.has(text)) return ttsCache.get(text);
-  const tts = new MsEdgeTTS();
-  await tts.setMetadata(TTS_VOICE, TTS_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
-  const { audioStream } = tts.toStream(text);
-  const buf = await new Promise((resolve, reject) => {
-    const chunks = [];
-    audioStream.on("data", c => chunks.push(c));
-    audioStream.on("end", () => resolve(Buffer.concat(chunks)));
-    audioStream.on("error", reject);
+/* Dự phòng khi Edge TTS bị mạng/máy chủ chặn: giọng Google Dịch (kém tự nhiên
+   hơn Edge nhưng chạy được từ hầu hết mọi nơi). */
+function googleTts(text) {
+  const https = require("https");
+  const q = encodeURIComponent(text.slice(0, 190));
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=${q}`;
+  return new Promise((resolve, reject) => {
+    https.get(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } }, r => {
+      if (r.statusCode !== 200) { r.resume(); return reject(new Error("google tts " + r.statusCode)); }
+      const chunks = [];
+      r.on("data", c => chunks.push(c));
+      r.on("end", () => resolve(Buffer.concat(chunks)));
+    }).on("error", reject);
   });
+}
+async function ttsMp3(text) {
+  if (ttsCache.has(text)) return ttsCache.get(text);
+  let buf = null, edgeErr = null;
+  if (MsEdgeTTS) {
+    try {
+      const tts = new MsEdgeTTS();
+      await tts.setMetadata(TTS_VOICE, TTS_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+      const { audioStream } = tts.toStream(text);
+      buf = await new Promise((resolve, reject) => {
+        const chunks = [];
+        audioStream.on("data", c => chunks.push(c));
+        audioStream.on("end", () => resolve(Buffer.concat(chunks)));
+        audioStream.on("error", reject);
+      });
+    } catch (e) { edgeErr = e; buf = null; }
+  }
+  if (!buf || !buf.length) {
+    if (edgeErr) console.log("[TTS] Edge lỗi (" + String(edgeErr.message || edgeErr).slice(0, 80) + ") — dùng giọng Google dự phòng");
+    buf = await googleTts(text);
+  }
   if (ttsCache.size > 40) ttsCache.clear();
   ttsCache.set(text, buf);
   return buf;
