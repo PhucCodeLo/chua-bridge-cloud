@@ -28,12 +28,17 @@ const server = http.createServer((req, res) => {
       tiktok: { user: tiktok.user, state: tiktok.state, roomId: tiktok.roomId, lastError: tiktok.lastError } }));
   }
   if (p === "/") {
+    /* "/?live=1" is the natural URL to type — send it to the temple page. */
+    if (req.url.includes("live=1")) {
+      res.writeHead(302, { Location: "/index.html?live=1" });
+      return res.end();
+    }
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     return res.end(`<!doctype html><meta charset="utf-8"><title>Cầu nối Chùa Online</title>
 <body style="font-family:sans-serif;background:#17100a;color:#f3e3bb;text-align:center;padding:40px 16px">
 <h1>⛩️ Cầu nối Chùa Online đang chạy</h1>
 <p>Trạng thái TikTok: <b>${tiktok.state}</b>${tiktok.user ? " · @" + tiktok.user : ""}</p>
-<p>Mở trang chùa tại địa chỉ này thêm <b>/?live=1</b> là dùng được.</p>
+<p><a style="color:#ffd970;font-size:20px" href="/index.html?live=1">👉 Bấm vào đây để mở trang chùa</a></p>
 <p style="opacity:.7">Trang này mở ra cũng là để "đánh thức" máy chủ trước buổi live.</p></body>`);
   }
   const file = path.join(WWW, p === "/" ? "index.html" : p);
