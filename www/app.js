@@ -50,12 +50,12 @@ let devotees = [], congduc = 0; const boardMap = new Map(), usedNames = new Set(
    they walk in from the door, settle, and bow in prayer on their own rhythm. */
 const SKIN = "#eec39b";
 const TYPE_CONF = {
-  woman: { robe:"#93a3b8", shade:"#7c8ca3", hair:"#2e2622", bun:true, pin:true },
-  man:   { robe:"#8593a8", shade:"#71809a", hair:"#36302b", bun:false },
-  monk:  { robe:"#e08a3c", shade:"#c06f27", bald:true, sash:true },
-  nun:   { robe:"#7a5a3c", shade:"#644832", bald:true },
-  elder: { robe:"#8a5560", shade:"#74434d", hair:"#b3aca2", bun:true },
-  child: { robe:"#a9b9cb", shade:"#8fa2b8", hair:"#2e2622", bun:true },
+  woman: { robe:"#93a3b8", shade:"#7c8ca3", arm:"#5f6d84", hair:"#2e2622", bun:true, pin:true },
+  man:   { robe:"#8593a8", shade:"#71809a", arm:"#55637a", hair:"#36302b", bun:false },
+  monk:  { robe:"#e08a3c", shade:"#c06f27", arm:"#9c5416", bald:true, sash:true },
+  nun:   { robe:"#7a5a3c", shade:"#644832", arm:"#48331f", bald:true },
+  elder: { robe:"#8a5560", shade:"#74434d", arm:"#57313a", hair:"#b3aca2", bun:true },
+  child: { robe:"#a9b9cb", shade:"#8fa2b8", arm:"#6d7f96", hair:"#2e2622", bun:true },
 };
 function figureSVG(type){
   const c = TYPE_CONF[type] || TYPE_CONF.woman;
@@ -65,9 +65,9 @@ function figureSVG(type){
     <path d="M41 68 L45 138 M59 68 L55 138" stroke="rgba(0,0,0,.10)" stroke-width="3" fill="none"/>
     <path d="M50 28 Q29 32 26 52 L29 68 L71 68 L74 52 Q71 32 50 28Z" fill="${c.robe}"/>
     ${c.sash ? '<path d="M35 33 L67 61 L61 68 L30 40Z" fill="#a85b1e" opacity=".85"/>' : ""}
-    <path d="M33 50 Q37 22 47 9" stroke="${c.shade}" stroke-width="9.5" fill="none" stroke-linecap="round"/>
-    <path d="M67 50 Q63 22 53 9" stroke="${c.shade}" stroke-width="9.5" fill="none" stroke-linecap="round"/>
-    <ellipse cx="50" cy="7" rx="5.4" ry="7.4" fill="${SKIN}"/>
+    <path d="M31 52 Q23 30 42 9" stroke="${c.arm}" stroke-width="9.5" fill="none" stroke-linecap="round"/>
+    <path d="M69 52 Q77 30 58 9" stroke="${c.arm}" stroke-width="9.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="50" cy="6" rx="6" ry="8" fill="${SKIN}"/>
     <ellipse cx="37.4" cy="26" rx="2.6" ry="3.6" fill="${SKIN}"/>
     <ellipse cx="62.6" cy="26" rx="2.6" ry="3.6" fill="${SKIN}"/>
     <circle cx="50" cy="25" r="11.5" fill="${headFill}"/>
@@ -98,6 +98,8 @@ function renderBoard(){
 }
 function ticker(msg){ const t = $("#tickerText"); t.textContent = msg; t.classList.remove("pop"); void t.offsetWidth; t.classList.add("pop"); }
 function bow(dev){ if(!dev) return; dev.el.classList.remove("bow"); void dev.el.offsetWidth; dev.el.classList.add("bow"); }
+function bowAll(){ devotees.forEach(d=>{ d.el.classList.remove("bigbow"); void d.el.offsetWidth; d.el.classList.add("bigbow");
+  setTimeout(()=>d.el.classList.remove("bigbow"), 2700); }); }
 function say(dev, text, ms=2600){
   if(!dev) return;
   dev.bubble.textContent = text; dev.bubble.classList.add("show");
@@ -828,4 +830,5 @@ if(TEST_MODE && $("#testPanel")){
   $("#btnTestGift").addEventListener("click", ()=>{ const g = GIFTS.find(x=>x.id === giftSel.value); const d = findOrJoin(tName()); if(d && g) handleGift(d, g); });
   $("#btnTestFill").addEventListener("click", ()=>{ for(let i=0;i<8;i++) handleJoin(); });
   $("#btnTestVerse").addEventListener("click", ()=>showVerse());
+  $("#btnTestBow").addEventListener("click", ()=>bowAll());
 }
