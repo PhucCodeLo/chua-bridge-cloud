@@ -62,7 +62,7 @@ async function init(){
   /* invisible floor that only catches shadows (the painted hall shows through) */
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(9, 10),
-    new THREE.ShadowMaterial({ opacity:.26 }));
+    new THREE.ShadowMaterial({ opacity:.38 }));
   ground.rotation.x = -Math.PI / 2;
   ground.position.z = -.2;
   ground.receiveShadow = true;
@@ -192,6 +192,11 @@ async function init(){
     });
     legs.visible = false;
     g.add(legs);
+    const blob = new THREE.Mesh(new THREE.CircleGeometry(.21, 20),
+      new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:.24, depthWrite:false }));
+    blob.rotation.x = -Math.PI / 2;
+    blob.position.y = .006;
+    g.add(blob);
     if (c.scale) g.scale.setScalar(c.scale);
     return { root:g, body, robe, legs, mixer:null, actions:null };
   }
@@ -230,8 +235,8 @@ async function init(){
       }
       return;
     }
-    d.fig.body.scale.y = kneel ? .88 : 1;
-    d.fig.robe.scale.x = d.fig.robe.scale.z = kneel ? 1.1 : 1;
+    d.fig.body.scale.y = kneel ? .8 : 1;
+    d.fig.robe.scale.x = d.fig.robe.scale.z = kneel ? 1.2 : 1;
     d.fig.legs.visible = !kneel;
   }
   function playClip(d, name, fade = .25){
@@ -337,8 +342,8 @@ async function init(){
   /* ---------- petals ------------------------------------------------------ */
   const PETALS = 70;
   const petalMesh = new THREE.InstancedMesh(
-    new THREE.PlaneGeometry(.085, .085),
-    new THREE.MeshBasicMaterial({ color:0xffb7d5, side:THREE.DoubleSide, transparent:true, opacity:.92 }),
+    new THREE.PlaneGeometry(.115, .115),
+    new THREE.MeshBasicMaterial({ color:0xff9ecb, side:THREE.DoubleSide, transparent:true, opacity:.95 }),
     PETALS);
   const petalData = [];
   function spawnPetal(p, burst){
@@ -368,7 +373,7 @@ async function init(){
         d.anim.update(k, dt);
         if (k >= 1){ const dn = d.anim.done; d.anim = null; dn && dn(); }
       } else if (!d.fig.mixer && d.kneeling){
-        d.fig.body.rotation.z = Math.sin(t * .9 + d.seat.x * 3) * .018;   // idle sway
+        d.fig.body.rotation.z = Math.sin(t * .9 + d.seat.x * 3) * .032;   // idle sway
       }
       /* name label projection */
       projV.setFromMatrixPosition(d.fig.root.matrixWorld);
@@ -431,9 +436,9 @@ async function init(){
     window.handleJoin = function(name){ const d = hj(name); if (d) join(d.name); return d; };
   }
   if (typeof window.handleGift === "function"){
-    const hg = window.handleGift;
-    window.handleGift = function(dev, gift, pts){ const r = hg(dev, gift, pts);
-      if (dev && dev.name) setTimeout(() => gift(dev.name), 60); return r; };
+    const hg = window.handleGift, giftMirror = gift;
+    window.handleGift = function(dev, g, pts){ const r = hg(dev, g, pts);
+      if (dev && dev.name) setTimeout(() => giftMirror(dev.name), 60); return r; };
   }
   if (typeof window.setAvatar === "function"){
     const sa = window.setAvatar;
