@@ -89,10 +89,10 @@ function figureSVG(type){
     <path d="M34 62 C32 78 33 90 35 102 M66 62 C68 78 67 90 65 102" stroke="rgba(0,0,0,.10)" stroke-width="2" fill="none"/>
     <path d="M31 48 C39 39 61 39 69 48" stroke="rgba(255,255,255,.20)" stroke-width="3" fill="none"/>
     ${c.sash ? '<path d="M30 42 L74 70 L68 78 L26 52Z" fill="#a85b1e" opacity=".8"/>' : ""}
-    <path d="M28 56 C22 36 28 18 42 10" stroke="${c.arm}" stroke-width="12" fill="none" stroke-linecap="round"/>
-    <path d="M72 56 C78 36 72 18 58 10" stroke="${c.arm}" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <path d="M28 56 C22 34 29 14 43 6" stroke="${c.arm}" stroke-width="13" fill="none" stroke-linecap="round"/>
+    <path d="M72 56 C78 34 71 14 57 6" stroke="${c.arm}" stroke-width="13" fill="none" stroke-linecap="round"/>
     ${headSVG(c, type)}
-    <ellipse cx="50" cy="8" rx="7" ry="9.5" fill="${SKIN}" stroke="rgba(0,0,0,.14)"/>
+    <ellipse cx="50" cy="4" rx="8" ry="11" fill="${SKIN}" stroke="rgba(0,0,0,.16)" stroke-width="1.2"/>
   </svg>`;
 }
 /* Standing/walking form for the high-angle view: narrower robe with a
@@ -548,7 +548,11 @@ function handleGift(dev, gift, ptsOverride){
       devotees.forEach((dv,i)=>setTimeout(()=>bow(dv), i*85));
       sndBell(); setTimeout(sndChime, 350); },
   };
-  perform(dev, FX[gift.fx], gift.fx==="dragon" ? 2200 : 1400);
+  const startPerform = ()=>perform(dev, FX[gift.fx], gift.fx==="dragon" ? 2200 : 1400);
+  /* a brand-new devotee is still walking in — let them reach their seat
+     first, then walk up to perform the offering */
+  if(dev.el.classList.contains("walking") && !dev.busy) setTimeout(startPerform, 1850);
+  else startPerform();
 }
 
 /* ---------- simulator UI ---------- */
