@@ -1,0 +1,1 @@
+{"dependencies":{"tiktok-live-connector":"^2.5.0","ws":"^8.18.0"},"engines":{"node":">=18"},"main":"server.js","name":"chua-bridge-cloud","private":true,"scripts":{"start":"node server.js"},"version":"0.5.3"}

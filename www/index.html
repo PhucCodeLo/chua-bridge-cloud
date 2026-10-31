@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chùa Online — Prototype TikTok LIVE v0.5.9</title>
+<meta name="description" content="Chùa online phong cách điện ảnh: điện thờ thật, phật tử áo tràng vào lễ, tặng quà thắp hương thỉnh chuông qua TikTok LIVE.">
+<link rel="stylesheet" href="style.css?v=15">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#170903">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪷</text></svg>">
+</head>
+<body>
+<div id="phone">
+
+  <!-- ================= STAGE 2.5D ================= -->
+  <main id="stage">
+    <div id="bgWrap">
+      <img id="bgTop" src="https://chua-online-phucvjps-projects.vercel.app/assets/backdrop-top.jpg" alt="">
+      <img id="bgBot" src="https://chua-online-phucvjps-projects.vercel.app/assets/backdrop-bot.jpg" alt="">
+      <div id="rays"></div>
+      <div id="haloGlow"></div>
+      <div class="candleGlow" id="cgL"></div>
+      <div class="candleGlow" id="cgR"></div>
+      <div id="smoke"></div>
+      <div id="burnerGlow"></div>
+    </div>
+
+    <!-- bell hanging at right pillar -->
+    <div id="bell" title="Thỉnh chuông">
+      <div class="bellBeam"></div>
+      <div class="bellBody">🔔</div>
+    </div>
+
+    <div id="floorLayer"></div>
+    <div id="fx"></div>
+    <svg id="dragon" viewBox="0 0 300 90">
+      <path d="M5 60 C60 10, 110 95, 165 45 C210 5, 255 60, 295 30" fill="none" stroke="#ffd94d" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="295" cy="30" r="13" fill="#ffd94d"/>
+      <circle cx="299" cy="26" r="3.5" fill="#7a2d00"/>
+      <path d="M292 14 L286 2 M302 15 L306 3" stroke="#ffd94d" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+
+    <header id="topbar">
+      <div class="title">Chùa Online</div>
+      <div class="sub">🙏 <b id="devCount">0</b> phật tử đang lễ &nbsp;✦&nbsp; Công đức: <b id="congduc">0</b> &nbsp;✦&nbsp; <span class="ver">v0.5.9</span></div>
+    </header>
+
+    <!-- thank-you banner when a gift arrives -->
+    <div id="thanksBanner">
+      <div id="thanksTitle">🙏 Cảm ơn sen</div>
+      <div id="thanksSub"></div>
+    </div>
+
+    <!-- stage sound controls -->
+    <div class="stageCtl">
+      <button id="btnFs" title="Toàn màn hình">⛶</button>
+      <button id="btnMusic" title="Nhạc thiền">🎵</button>
+      <button id="btnVoice" title="Giọng cảm ơn">🗣️</button>
+    </div>
+
+    <aside id="giftMenu" class="panel">
+      <h3>Tặng quà để…</h3>
+      <div id="giftMenuList"></div>
+    </aside>
+
+    <aside id="board" class="panel">
+      <h3>Bảng Công Đức</h3>
+      <ol id="boardList"></ol>
+    </aside>
+
+    <!-- bottom tier bar, like real TikTok temple lives -->
+    <div id="tierBar">
+      <button class="tier" data-gift="huong"><span class="ti">🪔</span><span class="tn">Dâng hương</span><span class="tp">1 xu</span></button>
+      <button class="tier" data-gift="nen"><span class="ti">🙏</span><span class="tn">Lễ Phật</span><span class="tp">5 xu</span></button>
+      <button class="tier" data-gift="hoasen"><span class="ti">🪷</span><span class="tn">Hoa sen</span><span class="tp">10+ xu</span></button>
+    </div>
+
+    <div id="ticker"><span id="tickerText">Nam mô A Di Đà Phật 🙏 Chùa Online mở cửa — mời sen vào lễ</span></div>
+  </main>
+
+  <!-- ================= SIMULATOR ================= -->
+  <section id="sim">
+    <div class="simHead">
+      <b>🎛️ Bảng giả lập TikTok LIVE</b>
+      <span class="badge">CHƯA nối TikTok thật</span>
+    </div>
+    <div class="simRow">
+      <button id="btnJoin" class="simBtn">👣 Phật tử vào</button>
+      <button id="btnChat" class="simBtn">💬 Cầu nguyện</button>
+      <button id="btnAuto" class="simBtn on">⏸️ Tự chạy demo</button>
+      <button id="btnReset" class="simBtn">↺ Làm mới</button>
+    </div>
+    <div class="simLabel">Giả lập tặng quà (người tặng ngẫu nhiên trong điện):</div>
+    <div id="giftGrid"></div>
+    <p class="simNote">Bản <b>v0.5.9</b> thêm 2 thứ của live mẫu: <b>🎵 nhạc thiền</b> — em cho máy tự sinh nhạc chuông gió + gõ mõ + tiếng nền trầm bằng WebAudio (không dùng file nhạc thu sẵn nên <b>không lo bản quyền</b> khi lên TikTok), nhạc tự phát sau lần chạm đầu tiên, tắt/mở bằng nút 🎵 trên sân khấu; và <b>🗣️ lời cảm ơn khi có quà</b> — banner cảm ơn kèm lời chúc hiện giữa điện, quà từ 20 công đức trở lên còn được <b>giọng nói tiếng Việt đọc cảm ơn theo tên người tặng</b> (xếp hàng đợi, không nói chồng nhau), tắt/mở bằng nút 🗣️.
+    Khi nối TikTok thật, các nút giả lập được thay bằng event vào phòng / comment / quà thật từ LIVE — nhạc và giọng cảm ơn chạy chung trên máy phát, trộn thẳng vào luồng live.</p>
+  </section>
+</div>
+<script src="app.js?v=15"></script>
+</body>
+</html>
