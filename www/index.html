@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Chùa Online — Prototype TikTok LIVE v0.6.0</title>
+<title>Chùa Online · TikTok LIVE v0.7.0</title>
 <meta name="description" content="Chùa online phong cách điện ảnh: điện thờ thật, phật tử áo tràng vào lễ, tặng quà thắp hương thỉnh chuông qua TikTok LIVE.">
-<link rel="stylesheet" href="style.css?v=16">
+<link rel="stylesheet" href="style.css?v=19">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#170903">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪷</text></svg>">
@@ -43,7 +43,7 @@
 
     <header id="topbar">
       <div class="title">Chùa Online</div>
-      <div class="sub">🙏 <b id="devCount">0</b> phật tử đang lễ &nbsp;✦&nbsp; Công đức: <b id="congduc">0</b> &nbsp;✦&nbsp; <span class="ver">v0.6.0</span></div>
+      <div class="sub">🙏 <b id="devCount">0</b> phật tử đang lễ &nbsp;✦&nbsp; Công đức: <b id="congduc">0</b> &nbsp;✦&nbsp; <span class="ver">v0.7.0</span></div>
     </header>
 
     <!-- thank-you banner when a gift arrives -->
@@ -85,6 +85,27 @@
       <b>🎛️ Bảng giả lập TikTok LIVE</b>
       <span class="badge">CHƯA nối TikTok thật</span>
     </div>
+    <div id="testPanel">
+      <h4>🧪 Bàn test tính năng live</h4>
+      <div class="trow">
+        <input id="testName" value="Sen Test" maxlength="24" placeholder="Tên người xem">
+        <input id="testChat" maxlength="120" placeholder="Bình luận… thử gõ đúng 1 từ: sư">
+      </div>
+      <div class="trow">
+        <button id="btnTestJoin" class="simBtn">🪑 Vào lễ</button>
+        <button id="btnTestChat" class="simBtn">💬 Gửi bình luận</button>
+        <button id="btnTestLike" class="simBtn">❤️ Thả tim</button>
+      </div>
+      <div class="trow">
+        <select id="testGift"></select>
+        <button id="btnTestGift" class="simBtn">🎁 Tặng quà</button>
+      </div>
+      <div class="trow">
+        <button id="btnTestFill" class="simBtn">👥 Thêm 8 người</button>
+        <button id="btnTestVerse" class="simBtn">📿 Đọc lời kinh ngay</button>
+      </div>
+      <p class="thint">Cách test nhanh: (1) gõ bình luận <b>sư</b> rồi bấm Gửi → nhân vật biến thành sư thầy; thử tiếp <b>nữ</b>, <b>bà</b>, <b>tiểu</b>, <b>nam</b>. (2) Gõ một lời nguyện (vd "cầu cho mẹ mau khỏe") → Gửi, rồi chọn quà từ 20 công đức → bấm Tặng quà: banner + giọng đọc sẽ <b>hồi hướng đúng lời nguyện đó</b>. (3) Bấm <b>Thả tim</b> → tim bay trên đầu nhân vật. (4) Bấm <b>Thêm 8 người</b> vài lần cho đầy 24 ghế → chùa tự mở thêm hàng ghế phía sau.</p>
+    </div>
     <div class="simRow">
       <button id="btnJoin" class="simBtn">👣 Phật tử vào</button>
       <button id="btnChat" class="simBtn">💬 Cầu nguyện</button>
@@ -97,6 +118,6 @@
     Khi nối TikTok thật, các nút giả lập được thay bằng event vào phòng / comment / quà thật từ LIVE — nhạc và giọng cảm ơn chạy chung trên máy phát, trộn thẳng vào luồng live.</p>
   </section>
 </div>
-<script src="app.js?v=16"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>

@@ -30,18 +30,52 @@ const A = { buddha:{x:50,y:36}, burner:{x:50,y:61}, smoke:{x:50,y:56.5},
             candleL:{x:33,y:62.8}, candleR:{x:67,y:62.8},
             fruitL:{x:37,y:67}, fruitR:{x:64,y:67}, vaseL:{x:19.5,y:57}, vaseR:{x:80.5,y:57},
             bell:{x:87.5,y:47} };
-/* seats: rows back->front {feetY %, width %} */
-const ROWS = [ {y:78.5, w:14.5, z:5}, {y:85, w:17.5, z:6}, {y:91.5, w:21.5, z:7}, {y:98.5, w:26.5, z:8} ];
+/* seats: rows back->front {feetY %, width %, xs[]}. Back rows spread wider
+   (8 across) and the front row keeps only 4 large figures flanking the
+   carpet — the hall reads wide instead of two bunched columns. */
+const ROWS = [
+  {y:78.5, w:12,   z:5, xs:[7,17,27,37,63,73,83,93]},
+  {y:85,   w:14,   z:6, xs:[8,18.5,29,39.5,60.5,71,81.5,92]},
+  {y:91.5, w:17,   z:7, xs:[10.5,22,33.5,66.5,78,89.5]},
+  {y:98.5, w:21,   z:8, xs:[13,25.5,74.5,87]},
+];
 const SEATS = [];
-ROWS.forEach(r=>{ [8.5,20,31.5,68.5,80,91.5].forEach(x=>SEATS.push({x, y:r.y, w:r.w, z:r.z, taken:null})); });
-const SPOT = {x:50, y:77.5, w:24};
+ROWS.forEach(r=>{ r.xs.forEach(x=>SEATS.push({x, y:r.y, w:r.w, z:r.z, taken:null})); });
+const SPOT = {x:50, y:77.5, w:21};
 
 let devotees = [], congduc = 0; const boardMap = new Map(), usedNames = new Set();
 /* Avatar types: comment one word (nam / nữ / sư / ni / bà / tiểu / cao tăng)
-   to change your devotee's form — borrowed from the community temple idea. */
-const AVATARS = { woman: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-woman.webp", man: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-man.webp",
-                  monk: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-monk.webp", nun: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-nun.webp",
-                  elder: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-elder.webp", child: "https://chua-online-phucvjps-projects.vercel.app/assets/dev-child.webp" };
+   to change your devotee's form — borrowed from the community temple idea.
+   Devotees are articulated CARTOON figures drawn as SVG (no image files):
+   they walk in from the door, settle, and bow in prayer on their own rhythm. */
+const SKIN = "#eec39b";
+const TYPE_CONF = {
+  woman: { robe:"#93a3b8", shade:"#7c8ca3", hair:"#2e2622", bun:true, pin:true },
+  man:   { robe:"#8593a8", shade:"#71809a", hair:"#36302b", bun:false },
+  monk:  { robe:"#e08a3c", shade:"#c06f27", bald:true, sash:true },
+  nun:   { robe:"#7a5a3c", shade:"#644832", bald:true },
+  elder: { robe:"#8a5560", shade:"#74434d", hair:"#b3aca2", bun:true },
+  child: { robe:"#a9b9cb", shade:"#8fa2b8", hair:"#2e2622", bun:true },
+};
+function figureSVG(type){
+  const c = TYPE_CONF[type] || TYPE_CONF.woman;
+  const headFill = c.bald ? SKIN : c.hair;
+  return `<svg viewBox="0 0 100 160" aria-hidden="true">
+    <path d="M33 60 L67 60 L85 146 Q50 157 15 146 Z" fill="${c.shade}"/>
+    <path d="M41 68 L45 138 M59 68 L55 138" stroke="rgba(0,0,0,.10)" stroke-width="3" fill="none"/>
+    <path d="M50 28 Q29 32 26 52 L29 68 L71 68 L74 52 Q71 32 50 28Z" fill="${c.robe}"/>
+    ${c.sash ? '<path d="M35 33 L67 61 L61 68 L30 40Z" fill="#a85b1e" opacity=".85"/>' : ""}
+    <path d="M33 50 Q37 22 47 9" stroke="${c.robe}" stroke-width="8.5" fill="none" stroke-linecap="round"/>
+    <path d="M67 50 Q63 22 53 9" stroke="${c.robe}" stroke-width="8.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="50" cy="7" rx="4.6" ry="6.4" fill="${SKIN}"/>
+    <ellipse cx="37.4" cy="26" rx="2.6" ry="3.6" fill="${SKIN}"/>
+    <ellipse cx="62.6" cy="26" rx="2.6" ry="3.6" fill="${SKIN}"/>
+    <circle cx="50" cy="25" r="11.5" fill="${headFill}"/>
+    ${c.bald ? '<ellipse cx="45.5" cy="18.5" rx="4.2" ry="2.6" fill="rgba(255,255,255,.35)"/>' : ""}
+    ${c.bun ? `<circle cx="50" cy="11" r="5" fill="${c.hair}"/>` : ""}
+    ${c.pin ? '<circle cx="55.2" cy="9.3" r="1.7" fill="#f5c542"/>' : ""}
+  </svg>`;
+}
 const AVATAR_WORDS = { "nam": "man", "nữ": "woman", "nu": "woman", "sư": "monk", "su": "monk",
                        "ni": "nun", "bà": "elder", "ba": "elder", "tiểu": "child", "tieu": "child",
                        "cao tăng": "monk", "cao tang": "monk" };
@@ -197,6 +231,28 @@ function showThanks(dev, gift){
   clearTimeout(b._t); b._t = setTimeout(()=>b.classList.remove("show"), 4200);
   return { bless, wish };
 }
+/* Periodic peaceful verse: a soft bell, a blessing line on the banner, and
+   the voice reads it aloud — keeps a quiet hall feeling alive. */
+const VERSES = [
+  "Nam mô A Di Đà Phật. Chúc các sen tâm an, nhà an.",
+  "Một nén hương lòng, cầu cho cha mẹ bình an, mạnh khỏe.",
+  "Buông xuống muộn phiền, giữ tâm nhẹ như mây chiều.",
+  "Cầu cho người thương của các sen luôn được bình an che chở.",
+  "Tâm tĩnh thì sóng yên, lòng an thì nhà ấm.",
+  "Mỗi ngày một việc thiện, phước lành tự tìm về bên mình."
+];
+let verseIdx = 0;
+function showVerse(){
+  if(!devotees.some(d=>!d.leaving)) return;
+  const line = VERSES[verseIdx++ % VERSES.length];
+  const b = $("#thanksBanner");
+  $("#thanksTitle").textContent = "📿 Lời kinh an lành";
+  $("#thanksSub").textContent = line;
+  b.classList.remove("show"); void b.offsetWidth; b.classList.add("show");
+  clearTimeout(b._t); b._t = setTimeout(()=>b.classList.remove("show"), 6500);
+  ringBell(false);
+  speak(line);
+}
 function toggleFs(){
   if(document.fullscreenElement){ document.exitFullscreen && document.exitFullscreen().catch(()=>{}); return; }
   if(document.documentElement.requestFullscreen){
@@ -242,25 +298,26 @@ function makeDev(name, seat, instant){
   const el = document.createElement("div");
   el.className = "dev";
   const av = AVCOLORS[name.length % AVCOLORS.length];
+  const type = Math.random() < .5 ? "woman" : "man";
   el.innerHTML = `<div class="bubble"></div>
     <div class="chip" style="--av:${av}"><span class="ava">${name.trim()[0]}</span><span class="cname">${name}</span><span class="cpts"></span></div>
-    <div class="shadow"></div><img alt="" draggable="false">`;
-  const img = el.querySelector("img");
-  const type = Math.random() < .5 ? "woman" : "man";
-  img.src = AVATARS[type];
-  img.style.animationDelay = (Math.random()*3)+"s";
+    <div class="shadow"></div><div class="fig">${figureSVG(type)}</div>`;
+  const fig = el.querySelector(".fig");
+  fig.style.animationDuration = (6.5 + Math.random()*4).toFixed(1) + "s";
+  fig.style.animationDelay = (-Math.random()*8).toFixed(1) + "s";
   el.style.zIndex = seat.z;
   el.style.width = seat.w+"%";
   el.style.left = (instant ? seat.x : 50)+"%";
   el.style.top = (instant ? seat.y : 106)+"%";
   floorLayer.appendChild(el);
-  const dev = {name, seat, el, img, type, scale: 1, bubble: el.querySelector(".bubble"), chip: el.querySelector(".chip"),
+  const dev = {name, seat, el, fig, type, scale: 1, bubble: el.querySelector(".bubble"), chip: el.querySelector(".chip"),
                cpts: el.querySelector(".cpts"), home:{x:seat.x, y:seat.y, w:seat.w}, busy:false, lastAct: Date.now()};
   seat.taken = dev; devotees.push(dev);
   el.addEventListener("click", e=>{ e.stopPropagation(); bow(dev); say(dev, "Mô Phật 🙏"); sndPop(); });
   if(!instant){
+    el.classList.add("walking");
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.left = seat.x+"%"; el.style.top = seat.y+"%"; }));
-    setTimeout(()=>bow(dev), 1250);
+    setTimeout(()=>{ el.classList.remove("walking"); bow(dev); }, 1250);
   }
   updateTop(); return dev;
 }
@@ -336,9 +393,9 @@ function handleJoin(name){
   const existing = devotees.find(d=>d.name===name);
   if(existing) return existing;
   let seat = SEATS.find(s=>!s.taken);
-  if(!seat && SEATS.length < 30){
-    /* hall expansion: one extra back row (24 -> 30 seats) before anyone is evicted */
-    [8.5,20,31.5,68.5,80,91.5].forEach(x=>SEATS.push({x, y:75.5, w:13, z:4, taken:null}));
+  if(!seat && SEATS.length < 34){
+    /* hall expansion: one extra back row (26 -> 34 seats) before anyone is evicted */
+    [8,18,28,38,62,72,82,92].forEach(x=>SEATS.push({x, y:75, w:10.5, z:4, taken:null}));
     seat = SEATS.find(s=>!s.taken);
     if(seat) ticker("Chùa mở thêm hàng ghế phía sau — mời các sen vào lễ 🙏");
   }
@@ -356,7 +413,7 @@ function setAvatar(dev, type){
   if(!dev) return;
   if(dev.type === type){ bow(dev); return; }
   dev.type = type; dev.scale = type === "child" ? .74 : 1;
-  dev.img.src = AVATARS[type];
+  dev.fig.innerHTML = figureSVG(type);
   dev.home.w = dev.seat.w * dev.scale;
   if(!dev.busy) dev.el.style.width = dev.home.w + "%";
   for(let i=0;i<5;i++)
@@ -725,28 +782,8 @@ if(LIVE_MODE){
     }
     devotees.filter(d=>!d.busy && !d.leaving && now - d.lastAct > 4 * 60 * 1000).forEach(removeDev);
   }, 20000);
-  /* Periodic peaceful verse: a soft bell, a blessing line on the banner,
-     and the voice reads it aloud — keeps a quiet hall feeling alive. */
-  const VERSES = [
-    "Nam mô A Di Đà Phật. Chúc các sen tâm an, nhà an.",
-    "Một nén hương lòng, cầu cho cha mẹ bình an, mạnh khỏe.",
-    "Buông xuống muộn phiền, giữ tâm nhẹ như mây chiều.",
-    "Cầu cho người thương của các sen luôn được bình an che chở.",
-    "Tâm tĩnh thì sóng yên, lòng an thì nhà ấm.",
-    "Mỗi ngày một việc thiện, phước lành tự tìm về bên mình."
-  ];
-  let verseIdx = 0;
-  setInterval(()=>{
-    if(document.hidden || !devotees.some(d=>!d.leaving)) return;
-    const line = VERSES[verseIdx++ % VERSES.length];
-    const b = $("#thanksBanner");
-    $("#thanksTitle").textContent = "📿 Lời kinh an lành";
-    $("#thanksSub").textContent = line;
-    b.classList.remove("show"); void b.offsetWidth; b.classList.add("show");
-    clearTimeout(b._t); b._t = setTimeout(()=>b.classList.remove("show"), 6500);
-    ringBell(false);
-    speak(line);
-  }, 390000);
+  /* Periodic peaceful verse (showVerse lives near the thank-you banner). */
+  setInterval(()=>{ if(!document.hidden) showVerse(); }, 390000);
   if(PHONE_MODE && !QS.get("user")){
     const u = prompt("Nhập username TikTok của bạn (không có @):", "");
     if(u){ location.search = "?phone=1&user=" + encodeURIComponent(u.replace(/^@/, "")) + (QS.get("key") ? "&key=" + encodeURIComponent(QS.get("key")) : ""); }
@@ -773,3 +810,22 @@ if(LIVE_MODE){
   seed();
 }
 if(QS.has("overlay")) document.body.classList.add("overlay");
+
+/* ---------- TEST PANEL (?test=1): drive the live features by hand ----------
+   Avatar words, likes, hồi hướng wishes, seat expansion, verses — all the
+   things that normally only fire from real TikTok events. */
+const TEST_MODE = QS.has("test");
+if(TEST_MODE && $("#testPanel")){
+  $("#testPanel").style.display = "block";
+  setAuto(false);
+  const giftSel = $("#testGift");
+  GIFTS.forEach(g=>{ const o = document.createElement("option"); o.value = g.id; o.textContent = `${g.icon} ${g.name} (+${g.pts})`; giftSel.appendChild(o); });
+  giftSel.value = "hoasen";
+  const tName = ()=> ($("#testName").value || "Sen Test").trim().slice(0, 24) || "Sen Test";
+  $("#btnTestJoin").addEventListener("click", ()=>{ const d = findOrJoin(tName()); if(d) ticker(`${tName()} vừa vào lễ 🙏`); });
+  $("#btnTestChat").addEventListener("click", ()=>{ const t = $("#testChat").value.trim(); if(t) routeChat(tName(), t); });
+  $("#btnTestLike").addEventListener("click", ()=>{ if(findOrJoin(tName())) handleLike(tName()); });
+  $("#btnTestGift").addEventListener("click", ()=>{ const g = GIFTS.find(x=>x.id === giftSel.value); const d = findOrJoin(tName()); if(d && g) handleGift(d, g); });
+  $("#btnTestFill").addEventListener("click", ()=>{ for(let i=0;i<8;i++) handleJoin(); });
+  $("#btnTestVerse").addEventListener("click", ()=>showVerse());
+}
