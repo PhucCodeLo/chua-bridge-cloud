@@ -342,7 +342,7 @@ async function init(){
   /* ---------- petals ------------------------------------------------------ */
   const PETALS = 70;
   const petalMesh = new THREE.InstancedMesh(
-    new THREE.PlaneGeometry(.115, .115),
+    new THREE.PlaneGeometry(.16, .16),
     new THREE.MeshBasicMaterial({ color:0xff9ecb, side:THREE.DoubleSide, transparent:true, opacity:.95 }),
     PETALS);
   const petalData = [];
@@ -377,7 +377,9 @@ async function init(){
       }
       /* name label projection */
       projV.setFromMatrixPosition(d.fig.root.matrixWorld);
-      projV.y += .95 * (d.fig.root.scale.y || 1);
+      let lift = d.kneeling ? .8 : .95;
+      if (!d.fig.mixer && d.fig.body) lift += d.fig.body.rotation.x * .38;
+      projV.y += lift * (d.fig.root.scale.y || 1);
       projV.project(camera);
       if (projV.z > 1){ d.label.style.display = "none"; return; }
       d.label.style.display = "";
