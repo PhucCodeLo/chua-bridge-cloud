@@ -407,7 +407,7 @@ function perform(dev, fn, holdMs=1400){
       dev.el.style.left = dev.home.x+"%"; dev.el.style.top = dev.home.y+"%"; dev.el.style.width = dev.home.w+"%";
       setTimeout(()=>{ dev.el.classList.remove("walking"); renderFig(dev);
         dev.busy = false; dev.el.classList.remove("spot"); dev.el.style.zIndex = dev.seat.z; }, 1750);
-    }, holdMs + (doZoom ? 2300 : 0));
+    }, holdMs + (doZoom ? 2700 : 0));
   }, 1750);
 }
 

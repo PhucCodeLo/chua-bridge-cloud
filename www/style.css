@@ -186,8 +186,8 @@ body.overlay #stage{max-height:none;height:100dvh;aspect-ratio:auto}
   box-shadow:0 4px 14px rgba(0,0,0,.5), inset 0 0 12px rgba(0,0,0,.35);transition:opacity .6s, transform .6s}
 .couplet.left{left:1.3%}.couplet.right{right:1.3%}
 .couplet.flip{opacity:0;transform:scaleX(.55)}
-.dev.prostrate .fig{animation:prostrate 2.4s ease-in-out !important}
+.dev.prostrate .fig{animation:prostrate 1.9s ease-in-out 2 !important}
 @keyframes prostrate{0%,100%{transform:translateY(0) scale(1,1)}
-  32%,58%{transform:translateY(3.5%) scale(1.07,.58)}
+  32%,58%{transform:translateY(4%) scale(1.08,.52)}
   76%{transform:translateY(1%) scale(1.02,.85)}}
 #board{border:1px solid rgba(202,162,90,.8);box-shadow:0 0 0 3px rgba(90,10,10,.5), 0 6px 18px rgba(0,0,0,.5)}
