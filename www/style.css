@@ -48,12 +48,13 @@ body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sa
    every devotee runs their own duration/delay, so the hall never bows in sync */
 @keyframes praybow{
   0%,100%{transform:rotate(0deg) translateY(0) scaleY(1)}
-  10%{transform:rotate(.7deg)} 20%{transform:rotate(-.7deg)}
-  30%{transform:rotate(.5deg)} 40%{transform:rotate(-.4deg)}
-  56%{transform:rotate(0deg) translateY(0) scaleY(1)}
-  66%,74%{transform:rotate(0deg) translateY(3.6%) scaleY(.925)}
-  86%{transform:rotate(0deg) translateY(0) scaleY(1)}}
+  10%{transform:rotate(1.1deg)} 20%{transform:rotate(-1.1deg)}
+  30%{transform:rotate(.8deg)} 40%{transform:rotate(-.7deg)}
+  54%{transform:rotate(0deg) translateY(0) scaleY(1)}
+  64%,78%{transform:rotate(0deg) translateY(7.5%) scaleY(.85)}
+  90%{transform:rotate(0deg) translateY(0) scaleY(1)}}
 /* walking in from the door: quick little steps with a bob and a rock */
+.dev.walking{transition:left 1.7s ease,top 1.7s ease,width 1.7s ease}
 .dev.walking .fig{animation:walkstep .24s ease-in-out infinite}
 @keyframes walkstep{0%,100%{transform:translateY(0) rotate(-1.8deg)}50%{transform:translateY(-3.6%) rotate(1.8deg)}}
 .dev.bow .fig{animation:bowDip .85s ease}

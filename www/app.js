@@ -61,13 +61,13 @@ function figureSVG(type){
   const c = TYPE_CONF[type] || TYPE_CONF.woman;
   const headFill = c.bald ? SKIN : c.hair;
   return `<svg viewBox="0 0 100 160" aria-hidden="true">
-    <path d="M33 60 L67 60 L85 146 Q50 157 15 146 Z" fill="${c.shade}"/>
+    <path d="M33 60 L67 60 L85 146 Q50 157 15 146 Z" fill="${c.shade}" stroke="rgba(43,20,4,.30)" stroke-width="1.4"/>
     <path d="M41 68 L45 138 M59 68 L55 138" stroke="rgba(0,0,0,.10)" stroke-width="3" fill="none"/>
     <path d="M50 28 Q29 32 26 52 L29 68 L71 68 L74 52 Q71 32 50 28Z" fill="${c.robe}"/>
     ${c.sash ? '<path d="M35 33 L67 61 L61 68 L30 40Z" fill="#a85b1e" opacity=".85"/>' : ""}
-    <path d="M33 50 Q37 22 47 9" stroke="${c.robe}" stroke-width="8.5" fill="none" stroke-linecap="round"/>
-    <path d="M67 50 Q63 22 53 9" stroke="${c.robe}" stroke-width="8.5" fill="none" stroke-linecap="round"/>
-    <ellipse cx="50" cy="7" rx="4.6" ry="6.4" fill="${SKIN}"/>
+    <path d="M33 50 Q37 22 47 9" stroke="${c.shade}" stroke-width="9.5" fill="none" stroke-linecap="round"/>
+    <path d="M67 50 Q63 22 53 9" stroke="${c.shade}" stroke-width="9.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="50" cy="7" rx="5.4" ry="7.4" fill="${SKIN}"/>
     <ellipse cx="37.4" cy="26" rx="2.6" ry="3.6" fill="${SKIN}"/>
     <ellipse cx="62.6" cy="26" rx="2.6" ry="3.6" fill="${SKIN}"/>
     <circle cx="50" cy="25" r="11.5" fill="${headFill}"/>
@@ -317,7 +317,7 @@ function makeDev(name, seat, instant){
   if(!instant){
     el.classList.add("walking");
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.left = seat.x+"%"; el.style.top = seat.y+"%"; }));
-    setTimeout(()=>{ el.classList.remove("walking"); bow(dev); }, 1250);
+    setTimeout(()=>{ el.classList.remove("walking"); bow(dev); }, 1750);
   }
   updateTop(); return dev;
 }
