@@ -245,7 +245,7 @@ async function init(){
     blob.position.y = .006;
     wrap.add(blob);
     return { root:wrap, body:wrap, robe:null, legs:null, mixer, actions, glbRoot:root,
-             walkClip:!!actions.walk };
+             walkClip:!!actions.walk, spine:root.getObjectByName("Spine") };
   }
 
   /* ---------- devotees + tiny action engine ---------------------------- */
@@ -494,6 +494,23 @@ async function init(){
     b.textContent = "🧎 3D: tất cả cùng lạy";
     b.addEventListener("click", bowAll);
     tp.appendChild(b);
+  }
+  if (QS.has("test")){
+    const dbg = document.createElement("div");
+    dbg.id = "dbg3d";
+    dbg.style.cssText = "position:absolute;left:6px;bottom:46px;z-index:40;background:rgba(0,0,0,.75);color:#7dff9a;font:11px monospace;padding:3px 7px;border-radius:6px;pointer-events:none";
+    stage.appendChild(dbg);
+    setInterval(() => {
+      let line = "3D: no performance";
+      devotees.forEach(d => {
+        if (d.busy){
+          const clip = d.current && d.current.getClip() ? d.current.getClip().name : "-";
+          const bend = d.fig.spine ? Math.round(THREE.MathUtils.radToDeg(d.fig.spine.rotation.x)) + "deg" : "-";
+          line = `3D ${d.name}: clip=${clip} spine=${bend} busy=true`;
+        }
+      });
+      dbg.textContent = line;
+    }, 250);
   }
   console.log("Chùa 3D ready" + (glbTemplate ? " (GLB model)" : " (built-in figures)"));
 }
