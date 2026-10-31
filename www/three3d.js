@@ -107,14 +107,24 @@ async function init(){
   const SKIN = 0xe8b98d;
   let glbTemplate = null, glbClips = {};
   const modelUrl = QS.get("model");
-  if (modelUrl){
-    try {
-      const g = await new GLTFLoader().loadAsync(modelUrl);
-      glbTemplate = g.scene;
-      g.animations.forEach(c => glbClips[c.name.toLowerCase()] = c);
-      console.log("3D model loaded:", modelUrl, "clips:", Object.keys(glbClips));
-    } catch(e){ console.warn("3D model failed, using built-in figures:", e); }
+  const MODEL_PARTS = ["https://chua-online-phucvjps-projects.vercel.app/assets/model-0.bin",
+                       "https://chua-online-phucvjps-projects.vercel.app/assets/model-1.bin"];
+  async function fetchJoined(urls){
+    const bufs = await Promise.all(urls.map(u => fetch(u).then(r => {
+      if (!r.ok) throw new Error("model part " + r.status); return r.arrayBuffer(); })));
+    const total = bufs.reduce((a, b) => a + b.byteLength, 0);
+    const out = new Uint8Array(total); let o = 0;
+    for (const b of bufs){ out.set(new Uint8Array(b), o); o += b.byteLength; }
+    return out.buffer;
   }
+  try {
+    const buf = modelUrl ? await (await fetch(modelUrl)).arrayBuffer()
+                         : await fetchJoined(MODEL_PARTS);
+    const g = await new GLTFLoader().parseAsync(buf, "");
+    glbTemplate = g.scene;
+    g.animations.forEach(c => glbClips[c.name.toLowerCase()] = c);
+    console.log("3D model loaded, clips:", Object.keys(glbClips));
+  } catch(e){ console.warn("3D model failed, using built-in figures:", e); }
   function findClip(...names){
     for (const n of names) for (const k of Object.keys(glbClips))
       if (k.includes(n)) return glbClips[k];
@@ -201,24 +211,41 @@ async function init(){
     return { root:g, body, robe, legs, mixer:null, actions:null };
   }
 
+  /* His two supplied colors lead the palette (pink, gold), then temple tones. */
+  const PALETTE = [0xED7399, 0xFAC719, 0xE08A3C, 0x7A5A3C, 0x8593A8, 0x9E4A54, 0x7A6AA8, 0x5F8A6A];
   function buildFigure(type){
     if (!glbTemplate) return buildProcedural(type, (Math.random() * .1 - .05));
+    const tint = PALETTE[Math.floor(Math.random() * PALETTE.length)];
     const root = SkeletonUtils.clone(glbTemplate);
-    root.traverse(o => { if (o.isMesh){ o.castShadow = true; } });
+    root.traverse(o => { if (o.isMesh){ o.castShadow = true;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      const cloned = mats.map(m => { const c = m.clone();
+        if (c.name === "vai") c.color.setHex(tint); return c; });
+      o.material = Array.isArray(o.material) ? cloned : cloned[0];
+    }});
     const box = new THREE.Box3().setFromObject(root);
     const h = Math.max(box.max.y - box.min.y, .001);
     root.scale.setScalar(.68 / h);
     const mixer = new THREE.AnimationMixer(root);
     const actions = {};
-    const want = { idle:["idle","stand"], walk:["walk","run"], kneel:["kneel"],
-                   bow:["bow","pray"], prostrate:["prostrat","bow"] };
+    const want = { idle:["nghi","idle","stand"], walk:["walk","run"], kneel:["nghi","kneel"],
+                   bow:["chao","bow","pray"], prostrate:["lay","prostrat","bow"] };
     for (const k of Object.keys(want)){
       const clip = findClip(...want[k]);
       if (clip) actions[k] = mixer.clipAction(clip);
     }
+    for (const k of ["bow", "prostrate"])
+      if (actions[k]){ actions[k].setLoop(THREE.LoopOnce, 1); actions[k].clampWhenFinished = true; }
     const wrap = new THREE.Group();
+    wrap.rotation.y = Math.PI;   /* the model faces +Z; the hall needs its back to the camera */
     wrap.add(root);
-    return { root:wrap, body:wrap, robe:null, legs:null, mixer, actions, glbRoot:root };
+    const blob = new THREE.Mesh(new THREE.CircleGeometry(.21, 20),
+      new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:.24, depthWrite:false }));
+    blob.rotation.x = -Math.PI / 2;
+    blob.position.y = .006;
+    wrap.add(blob);
+    return { root:wrap, body:wrap, robe:null, legs:null, mixer, actions, glbRoot:root,
+             walkClip:!!actions.walk };
   }
 
   /* ---------- devotees + tiny action engine ---------------------------- */
@@ -226,13 +253,14 @@ async function init(){
   const easeIO = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
   function setKneel(d, kneel){
     d.kneeling = kneel;
-    if (d.fig.mixer){ /* GLB: crossfade to the kneel/idle clip if present */
+    if (d.fig.mixer){ /* GLB: crossfade to the rest clip; squash reads as kneeling */
       const target = kneel ? (d.fig.actions.kneel || d.fig.actions.idle) : d.fig.actions.idle;
       if (target && d.current !== target){
         if (d.current) d.current.fadeOut(.3);
         target.reset().fadeIn(.3).play();
         d.current = target;
       }
+      d.fig.root.scale.y = kneel ? .82 : 1;
       return;
     }
     d.fig.body.scale.y = kneel ? .8 : 1;
@@ -258,12 +286,14 @@ async function init(){
     anim(d, dur, k => {
       d.fig.root.position.x = sx + (tx - sx) * k;
       d.fig.root.position.z = sz + (tz - sz) * k;
-      if (!d.fig.mixer) d.fig.body.position.y = Math.abs(Math.sin(k * dist * 9)) * .022;
+      if (!d.fig.walkClip) d.fig.body.position.y = Math.abs(Math.sin(k * dist * 9)) * .022;
     }, () => { d.fig.body.position.y = 0; setKneel(d, true); playClip(d, "kneel"); done && done(); });
   }
   function bowAnim(d, deep, done){
     if (playClip(d, deep ? "prostrate" : "bow")){
-      anim(d, deep ? 3.4 : 1.1, () => {}, () => { playClip(d, "kneel"); done && done(); });
+      const cd = d.current && d.current.getClip() ? d.current.getClip().duration
+               : (deep ? 3.4 : 1.1);
+      anim(d, cd, () => {}, () => { playClip(d, "kneel"); done && done(); });
       return;
     }
     const peak = deep ? -1.02 : -.5, dur = deep ? 3.6 : 1.15;
@@ -313,13 +343,13 @@ async function init(){
     const startBg = parseFloat(worldEl && worldEl.dataset.s ? worldEl.dataset.s : "1") || 1;
     camAnim = { t:0, dur, fromPos, toPos, fromTgt, toTgt, startBg, bgScale, done };
   }
-  function giftCam(d, done){
+  function giftCam(d, holdMs){
     const p = d.fig.root.position;
     flyCam(new THREE.Vector3(p.x * .45, 1.65, p.z + 3.1),
-           new THREE.Vector3(p.x, .5, p.z), 1.5, 1.32,
-           () => setTimeout(done, 60));
-    setTimeout(() => flyCam(CAM_HOME.pos, CAM_HOME.tgt, 1.5, 1, () => { camBusy = false; }), 150 + 3400);
-    setTimeout(() => { camBusy = false; }, 8000);
+           new THREE.Vector3(p.x, .5, p.z), 1.5, 1.32, () => {});
+    setTimeout(() => flyCam(CAM_HOME.pos, CAM_HOME.tgt, 1.5, 1, () => { camBusy = false; }),
+               250 + (holdMs || 3600));
+    setTimeout(() => { camBusy = false; }, 9000);
   }
 
   /* ---------- gifts ------------------------------------------------------ */
@@ -334,7 +364,11 @@ async function init(){
       bowAnim(d, true, () => {
         walkTo(d, d.seat.x, d.seat.z, () => { d.busy = false; });
       });
-      if (doZoom) giftCam(d, () => {});
+      if (doZoom){
+        const bowMs = d.fig.actions && d.fig.actions.prostrate
+          ? d.fig.actions.prostrate.getClip().duration * 1000 : 3600;
+        giftCam(d, bowMs);
+      }
     });
   }
   function bowAll(){ devotees.forEach(d => { if (!d.busy) bowAnim(d, false); }); }
@@ -377,9 +411,14 @@ async function init(){
       }
       /* name label projection */
       projV.setFromMatrixPosition(d.fig.root.matrixWorld);
-      let lift = d.kneeling ? .8 : .95;
-      if (!d.fig.mixer && d.fig.body) lift += d.fig.body.rotation.x * .38;
-      projV.y += lift * (d.fig.root.scale.y || 1);
+      let lift;
+      if (d.fig.mixer) lift = d.kneeling ? .64 : .78;
+      else {
+        lift = d.kneeling ? .8 : .95;
+        if (d.fig.body) lift += d.fig.body.rotation.x * .38;
+        lift *= (d.fig.root.scale.y || 1);
+      }
+      projV.y += lift;
       projV.project(camera);
       if (projV.z > 1){ d.label.style.display = "none"; return; }
       d.label.style.display = "";
