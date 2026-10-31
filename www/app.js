@@ -34,14 +34,14 @@ const A = { buddha:{x:50,y:36}, burner:{x:50,y:61}, smoke:{x:50,y:56.5},
    (8 across) and the front row keeps only 4 large figures flanking the
    carpet — the hall reads wide instead of two bunched columns. */
 const ROWS = [
-  {y:78.5, w:12,   z:5, xs:[7,17,27,37,63,73,83,93]},
-  {y:85,   w:14,   z:6, xs:[8,18.5,29,39.5,60.5,71,81.5,92]},
-  {y:91.5, w:17,   z:7, xs:[10.5,22,33.5,66.5,78,89.5]},
-  {y:98.5, w:21,   z:8, xs:[13,25.5,74.5,87]},
+  {y:78.5, w:11,   z:5, xs:[7,17,27,37,63,73,83,93]},
+  {y:85,   w:13,   z:6, xs:[8,18.5,29,39.5,60.5,71,81.5,92]},
+  {y:91.5, w:15.5, z:7, xs:[10.5,22,33.5,66.5,78,89.5]},
+  {y:98.5, w:19.5, z:8, xs:[13,25.5,74.5,87]},
 ];
 const SEATS = [];
 ROWS.forEach(r=>{ r.xs.forEach(x=>SEATS.push({x, y:r.y, w:r.w, z:r.z, taken:null})); });
-const SPOT = {x:50, y:77.5, w:21};
+const SPOT = {x:50, y:77.5, w:20};
 
 let devotees = [], congduc = 0; const boardMap = new Map(), usedNames = new Set();
 /* Avatar types: comment one word (nam / nữ / sư / ni / bà / tiểu / cao tăng)
@@ -75,6 +75,32 @@ function figureSVG(type){
     ${c.bun ? `<circle cx="50" cy="11" r="5" fill="${c.hair}"/>` : ""}
     ${c.pin ? '<circle cx="55.2" cy="9.3" r="1.7" fill="#f5c542"/>' : ""}
   </svg>`;
+}
+/* Standing/walking figure: full body with legs that step (leg swing is CSS).
+   Used while a devotee walks in, walks to the offering spot, or walks out;
+   the kneeling figure above is used once they are seated. */
+function figureWalkSVG(type){
+  const c = TYPE_CONF[type] || TYPE_CONF.woman;
+  const headFill = c.bald ? SKIN : c.hair;
+  return `<svg class="wfig" viewBox="0 0 100 172" aria-hidden="true">
+    <g class="legL"><path d="M39.5 104 L48.5 104 L47.5 148 L38.5 148 Z" fill="#3a4150"/><ellipse cx="43" cy="152" rx="6.5" ry="3.6" fill="#241f1c"/></g>
+    <g class="legR"><path d="M51.5 104 L60.5 104 L61.5 148 L52.5 148 Z" fill="#333a47"/><ellipse cx="57" cy="152" rx="6.5" ry="3.6" fill="#241f1c"/></g>
+    <path d="M50 30 Q29 33 26.5 56 L30 114 Q50 121 70 114 L73.5 56 Q71 33 50 30Z" fill="${c.robe}" stroke="rgba(43,20,4,.25)" stroke-width="1.2"/>
+    <path d="M50 96 L50 117" stroke="${c.shade}" stroke-width="2.5"/>
+    ${c.sash ? '<path d="M35 36 L67 62 L61 69 L30 43Z" fill="#a85b1e" opacity=".85"/>' : ""}
+    <path d="M28.5 50 Q23 76 27 99" stroke="${c.arm}" stroke-width="8.5" fill="none" stroke-linecap="round"/>
+    <path d="M71.5 50 Q77 76 73 99" stroke="${c.arm}" stroke-width="8.5" fill="none" stroke-linecap="round"/>
+    <circle cx="27.5" cy="102" r="3.2" fill="${SKIN}"/><circle cx="72.5" cy="102" r="3.2" fill="${SKIN}"/>
+    <ellipse cx="37.4" cy="25" rx="2.6" ry="3.6" fill="${SKIN}"/>
+    <ellipse cx="62.6" cy="25" rx="2.6" ry="3.6" fill="${SKIN}"/>
+    <circle cx="50" cy="24" r="11" fill="${headFill}"/>
+    ${c.bald ? '<ellipse cx="45.5" cy="17.5" rx="4.2" ry="2.6" fill="rgba(255,255,255,.35)"/>' : ""}
+    ${c.bun ? `<circle cx="50" cy="10" r="5" fill="${c.hair}"/>` : ""}
+    ${c.pin ? '<circle cx="55.2" cy="8.3" r="1.7" fill="#f5c542"/>' : ""}
+  </svg>`;
+}
+function renderFig(dev){
+  dev.fig.innerHTML = dev.el.classList.contains("walking") ? figureWalkSVG(dev.type) : figureSVG(dev.type);
 }
 const AVATAR_WORDS = { "nam": "man", "nữ": "woman", "nu": "woman", "sư": "monk", "su": "monk",
                        "ni": "nun", "bà": "elder", "ba": "elder", "tiểu": "child", "tieu": "child",
@@ -303,7 +329,7 @@ function makeDev(name, seat, instant){
   const type = Math.random() < .5 ? "woman" : "man";
   el.innerHTML = `<div class="bubble"></div>
     <div class="chip" style="--av:${av}"><span class="ava">${name.trim()[0]}</span><span class="cname">${name}</span><span class="cpts"></span></div>
-    <div class="shadow"></div><div class="fig">${figureSVG(type)}</div>`;
+    <div class="shadow"></div><div class="fig">${instant ? figureSVG(type) : figureWalkSVG(type)}</div>`;
   const fig = el.querySelector(".fig");
   fig.style.animationDuration = (6.5 + Math.random()*4).toFixed(1) + "s";
   fig.style.animationDelay = (-Math.random()*8).toFixed(1) + "s";
@@ -319,7 +345,7 @@ function makeDev(name, seat, instant){
   if(!instant){
     el.classList.add("walking");
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.left = seat.x+"%"; el.style.top = seat.y+"%"; }));
-    setTimeout(()=>{ el.classList.remove("walking"); bow(dev); }, 1750);
+    setTimeout(()=>{ el.classList.remove("walking"); dev.fig.innerHTML = figureSVG(dev.type); bow(dev); }, 1750);
   }
   updateTop(); return dev;
 }
@@ -332,14 +358,18 @@ function perform(dev, fn, holdMs=1400){
   if(!dev){ fn && fn(null); return; }
   if(dev.busy){ fn && fn(dev); return; }
   dev.busy = true; dev.el.classList.add("spot"); dev.el.style.zIndex = 30;
+  dev.el.classList.add("walking"); renderFig(dev);
   dev.el.style.left = SPOT.x+"%"; dev.el.style.top = SPOT.y+"%"; dev.el.style.width = (SPOT.w * (dev.scale || 1))+"%";
   setTimeout(()=>{
+    dev.el.classList.remove("walking"); renderFig(dev);
     fn && fn(dev); bow(dev);
     setTimeout(()=>{
+      dev.el.classList.add("walking"); renderFig(dev);
       dev.el.style.left = dev.home.x+"%"; dev.el.style.top = dev.home.y+"%"; dev.el.style.width = dev.home.w+"%";
-      setTimeout(()=>{ dev.busy = false; dev.el.classList.remove("spot"); dev.el.style.zIndex = dev.seat.z; }, 1180);
+      setTimeout(()=>{ dev.el.classList.remove("walking"); renderFig(dev);
+        dev.busy = false; dev.el.classList.remove("spot"); dev.el.style.zIndex = dev.seat.z; }, 1750);
     }, holdMs);
-  }, 1200);
+  }, 1750);
 }
 
 /* ---------- events ---------- */
@@ -350,9 +380,10 @@ function evictOldest(){
 function removeDev(dev){
   if(!dev || dev.leaving) return;
   dev.leaving = true; dev.seat.taken = null;
-  dev.el.style.transition = "left 1s ease-in, bottom 1s ease-in, opacity .9s ease-in";
-  dev.el.style.left = "-12%"; dev.el.style.opacity = "0";
-  setTimeout(()=>{ dev.el.remove(); devotees = devotees.filter(d=>d !== dev); updateTop(); }, 980);
+  dev.el.classList.add("walking"); renderFig(dev);
+  dev.el.style.left = "50%"; dev.el.style.top = "109%";
+  setTimeout(()=>{ dev.el.style.transition = "opacity .45s ease"; dev.el.style.opacity = "0"; }, 1350);
+  setTimeout(()=>{ dev.el.remove(); devotees = devotees.filter(d=>d !== dev); updateTop(); }, 1850);
   updateTop();
 }
 function removeByName(name){
@@ -397,7 +428,7 @@ function handleJoin(name){
   let seat = SEATS.find(s=>!s.taken);
   if(!seat && SEATS.length < 34){
     /* hall expansion: one extra back row (26 -> 34 seats) before anyone is evicted */
-    [8,18,28,38,62,72,82,92].forEach(x=>SEATS.push({x, y:75, w:10.5, z:4, taken:null}));
+    [8,18,28,38,62,72,82,92].forEach(x=>SEATS.push({x, y:75, w:10, z:4, taken:null}));
     seat = SEATS.find(s=>!s.taken);
     if(seat) ticker("Chùa mở thêm hàng ghế phía sau — mời các sen vào lễ 🙏");
   }
@@ -415,7 +446,7 @@ function setAvatar(dev, type){
   if(!dev) return;
   if(dev.type === type){ bow(dev); return; }
   dev.type = type; dev.scale = type === "child" ? .74 : 1;
-  dev.fig.innerHTML = figureSVG(type);
+  renderFig(dev);
   dev.home.w = dev.seat.w * dev.scale;
   if(!dev.busy) dev.el.style.width = dev.home.w + "%";
   for(let i=0;i<5;i++)
