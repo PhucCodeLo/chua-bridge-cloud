@@ -26,22 +26,24 @@ const GIFTS = [
   {id:"thienha",icon:"🌌", name:"Thiên hà",     act:"Rồng Vàng hộ pháp",   pts:1199,fx:"dragon"},
 ];
 /* anchors (% of stage) measured on the backdrop art */
-const A = { buddha:{x:50,y:36}, burner:{x:50,y:61}, smoke:{x:50,y:56.5},
-            candleL:{x:33,y:62.8}, candleR:{x:67,y:62.8},
-            fruitL:{x:37,y:67}, fruitR:{x:64,y:67}, vaseL:{x:19.5,y:57}, vaseR:{x:80.5,y:57},
-            bell:{x:87.5,y:47} };
+const A = { buddha:{x:50,y:11}, burner:{x:50,y:57}, smoke:{x:50,y:50},
+            candleL:{x:44,y:20}, candleR:{x:56,y:20},
+            fruitL:{x:46,y:25}, fruitR:{x:54,y:25}, vaseL:{x:36,y:14}, vaseR:{x:64,y:14},
+            bell:{x:88.5,y:31} };
 /* seats: rows back->front {feetY %, width %, xs[]}. Back rows spread wider
    (8 across) and the front row keeps only 4 large figures flanking the
    carpet — the hall reads wide instead of two bunched columns. */
 const ROWS = [
-  {y:78.5, w:11,   z:5, xs:[7,17,27,37,63,73,83,93]},
-  {y:85,   w:13,   z:6, xs:[8,18.5,29,39.5,60.5,71,81.5,92]},
-  {y:91.5, w:15.5, z:7, xs:[10.5,22,33.5,66.5,78,89.5]},
-  {y:98.5, w:19.5, z:8, xs:[13,25.5,74.5,87]},
+  {y:47,   w:8,    z:3, xs:[29, 39, 61, 71]},
+  {y:56,   w:9,    z:4, xs:[24, 34.5, 65.5, 76]},
+  {y:66,   w:10.5, z:5, xs:[21, 32.5, 44, 56, 67.5, 79]},
+  {y:76.5, w:12,   z:6, xs:[18.5, 30.5, 42.5, 54.5, 66.5, 78.5]},
+  {y:87,   w:14,   z:7, xs:[17, 30, 43, 56, 69, 82]},
+  {y:97.5, w:16,   z:8, xs:[15.5, 29, 42.5, 56, 69.5, 83]},
 ];
 const SEATS = [];
 ROWS.forEach(r=>{ r.xs.forEach(x=>SEATS.push({x, y:r.y, w:r.w, z:r.z, taken:null})); });
-const SPOT = {x:50, y:77.5, w:20};
+const SPOT = {x:50, y:71.5, w:15.5};
 
 let devotees = [], congduc = 0; const boardMap = new Map(), usedNames = new Set();
 /* Avatar types: comment one word (nam / nữ / sư / ni / bà / tiểu / cao tăng)
@@ -57,46 +59,65 @@ const TYPE_CONF = {
   elder: { robe:"#8a5560", shade:"#74434d", arm:"#57313a", hair:"#b3aca2", bun:true },
   child: { robe:"#a9b9cb", shade:"#8fa2b8", arm:"#6d7f96", hair:"#2e2622", bun:true },
 };
+function shade(hex, f){ const n = parseInt(hex.slice(1), 16);
+  let r = (n>>16)&255, g = (n>>8)&255, b = n&255;
+  if(f >= 0){ r += (255-r)*f; g += (255-g)*f; b += (255-b)*f; } else { r *= 1+f; g *= 1+f; b *= 1+f; }
+  return `rgb(${r|0},${g|0},${b|0})`; }
+function headSVG(c, type){
+  return `<ellipse cx="36.6" cy="26" rx="2.8" ry="4" fill="${SKIN}"/>
+    <ellipse cx="63.4" cy="26" rx="2.8" ry="4" fill="${SKIN}"/>
+    <circle cx="50" cy="25" r="13" fill="url(#hg${type})"/>
+    ${c.bald ? '<ellipse cx="45" cy="18" rx="4.5" ry="2.8" fill="rgba(255,255,255,.38)"/>' : ""}
+    ${c.bun ? `<circle cx="50" cy="10.5" r="5.5" fill="url(#hg${type})"/>` : ""}
+    ${c.pin ? '<circle cx="55.4" cy="8.6" r="1.7" fill="#f5c542"/>' : ""}`;
+}
+/* Devotee seen from above-behind (high-angle hall): big head, shoulders,
+   shaded robe, praying arms rising in front and joining above the head. */
 function figureSVG(type){
   const c = TYPE_CONF[type] || TYPE_CONF.woman;
-  const headFill = c.bald ? SKIN : c.hair;
-  return `<svg viewBox="0 0 100 160" aria-hidden="true">
-    <path d="M33 60 L67 60 L85 146 Q50 157 15 146 Z" fill="${c.shade}" stroke="rgba(43,20,4,.30)" stroke-width="1.4"/>
-    <path d="M41 68 L45 138 M59 68 L55 138" stroke="rgba(0,0,0,.10)" stroke-width="3" fill="none"/>
-    <path d="M50 28 Q29 32 26 52 L29 68 L71 68 L74 52 Q71 32 50 28Z" fill="${c.robe}"/>
-    ${c.sash ? '<path d="M35 33 L67 61 L61 68 L30 40Z" fill="#a85b1e" opacity=".85"/>' : ""}
-    <path d="M31 52 Q23 30 42 9" stroke="${c.arm}" stroke-width="9.5" fill="none" stroke-linecap="round"/>
-    <path d="M69 52 Q77 30 58 9" stroke="${c.arm}" stroke-width="9.5" fill="none" stroke-linecap="round"/>
-    <ellipse cx="50" cy="6" rx="6" ry="8" fill="${SKIN}"/>
-    <ellipse cx="37.4" cy="26" rx="2.6" ry="3.6" fill="${SKIN}"/>
-    <ellipse cx="62.6" cy="26" rx="2.6" ry="3.6" fill="${SKIN}"/>
-    <circle cx="50" cy="25" r="11.5" fill="${headFill}"/>
-    ${c.bald ? '<ellipse cx="45.5" cy="18.5" rx="4.2" ry="2.6" fill="rgba(255,255,255,.35)"/>' : ""}
-    ${c.bun ? `<circle cx="50" cy="11" r="5" fill="${c.hair}"/>` : ""}
-    ${c.pin ? '<circle cx="55.2" cy="9.3" r="1.7" fill="#f5c542"/>' : ""}
+  return `<svg viewBox="0 0 100 148" aria-hidden="true">
+    <defs>
+      <linearGradient id="rg${type}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${shade(c.robe, .22)}"/><stop offset=".45" stop-color="${c.robe}"/><stop offset="1" stop-color="${shade(c.robe, -.28)}"/>
+      </linearGradient>
+      <radialGradient id="hg${type}" cx=".38" cy=".3" r=".95">
+        <stop offset="0" stop-color="${shade(c.bald ? "#e8b98d" : c.hair, .3)}"/><stop offset="1" stop-color="${c.bald ? SKIN : c.hair}"/>
+      </radialGradient>
+    </defs>
+    <path d="M50 30 C34 32 25 44 22 62 L26 122 C30 134 70 134 74 122 L78 62 C75 44 66 32 50 30Z" fill="url(#rg${type})" stroke="rgba(43,20,4,.30)" stroke-width="1.3"/>
+    <path d="M50 46 L50 126" stroke="rgba(0,0,0,.13)" stroke-width="2.5"/>
+    <path d="M33 60 C31 84 32 104 34 124 M67 60 C69 84 68 104 66 124" stroke="rgba(0,0,0,.10)" stroke-width="2" fill="none"/>
+    <path d="M30 47 C38 37 62 37 70 47" stroke="rgba(255,255,255,.20)" stroke-width="3" fill="none"/>
+    ${c.sash ? '<path d="M31 40 L73 75 L66 83 L27 50Z" fill="#a85b1e" opacity=".8"/>' : ""}
+    <path d="M29 54 C24 34 30 16 43 9" stroke="${c.arm}" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <path d="M71 54 C76 34 70 16 57 9" stroke="${c.arm}" stroke-width="10" fill="none" stroke-linecap="round"/>
+    ${headSVG(c, type)}
+    <ellipse cx="50" cy="6.5" rx="6" ry="8" fill="${SKIN}" stroke="rgba(0,0,0,.14)"/>
   </svg>`;
 }
-/* Standing/walking figure: full body with legs that step (leg swing is CSS).
-   Used while a devotee walks in, walks to the offering spot, or walks out;
-   the kneeling figure above is used once they are seated. */
+/* Standing/walking form for the high-angle view: narrower robe with a
+   higher hem; from above, the stepping shows as alternating shoe tips
+   under the hem (CSS) plus the body bob on the wrapper. */
 function figureWalkSVG(type){
   const c = TYPE_CONF[type] || TYPE_CONF.woman;
-  const headFill = c.bald ? SKIN : c.hair;
-  return `<svg class="wfig" viewBox="0 0 100 172" aria-hidden="true">
-    <g class="legL"><path d="M39.5 104 L48.5 104 L47.5 148 L38.5 148 Z" fill="#3a4150"/><ellipse cx="43" cy="152" rx="6.5" ry="3.6" fill="#241f1c"/></g>
-    <g class="legR"><path d="M51.5 104 L60.5 104 L61.5 148 L52.5 148 Z" fill="#333a47"/><ellipse cx="57" cy="152" rx="6.5" ry="3.6" fill="#241f1c"/></g>
-    <path d="M50 30 Q29 33 26.5 56 L30 114 Q50 121 70 114 L73.5 56 Q71 33 50 30Z" fill="${c.robe}" stroke="rgba(43,20,4,.25)" stroke-width="1.2"/>
-    <path d="M50 96 L50 117" stroke="${c.shade}" stroke-width="2.5"/>
-    ${c.sash ? '<path d="M35 36 L67 62 L61 69 L30 43Z" fill="#a85b1e" opacity=".85"/>' : ""}
-    <path d="M28.5 50 Q23 76 27 99" stroke="${c.arm}" stroke-width="8.5" fill="none" stroke-linecap="round"/>
-    <path d="M71.5 50 Q77 76 73 99" stroke="${c.arm}" stroke-width="8.5" fill="none" stroke-linecap="round"/>
-    <circle cx="27.5" cy="102" r="3.2" fill="${SKIN}"/><circle cx="72.5" cy="102" r="3.2" fill="${SKIN}"/>
-    <ellipse cx="37.4" cy="25" rx="2.6" ry="3.6" fill="${SKIN}"/>
-    <ellipse cx="62.6" cy="25" rx="2.6" ry="3.6" fill="${SKIN}"/>
-    <circle cx="50" cy="24" r="11" fill="${headFill}"/>
-    ${c.bald ? '<ellipse cx="45.5" cy="17.5" rx="4.2" ry="2.6" fill="rgba(255,255,255,.35)"/>' : ""}
-    ${c.bun ? `<circle cx="50" cy="10" r="5" fill="${c.hair}"/>` : ""}
-    ${c.pin ? '<circle cx="55.2" cy="8.3" r="1.7" fill="#f5c542"/>' : ""}
+  return `<svg class="wfig" viewBox="0 0 100 148" aria-hidden="true">
+    <defs>
+      <linearGradient id="wg${type}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${shade(c.robe, .22)}"/><stop offset=".45" stop-color="${c.robe}"/><stop offset="1" stop-color="${shade(c.robe, -.28)}"/>
+      </linearGradient>
+      <radialGradient id="hg${type}" cx=".38" cy=".3" r=".95">
+        <stop offset="0" stop-color="${shade(c.bald ? "#e8b98d" : c.hair, .3)}"/><stop offset="1" stop-color="${c.bald ? SKIN : c.hair}"/>
+      </radialGradient>
+    </defs>
+    <g class="shoeL"><ellipse cx="41" cy="136" rx="7" ry="4" fill="#26221f"/></g>
+    <g class="shoeR"><ellipse cx="59" cy="136" rx="7" ry="4" fill="#26221f"/></g>
+    <path d="M50 30 C36 32 28 44 26 60 L29 110 C34 119 66 119 71 110 L74 60 C72 44 64 32 50 30Z" fill="url(#wg${type})" stroke="rgba(43,20,4,.28)" stroke-width="1.2"/>
+    <path d="M50 94 L50 112" stroke="${c.shade}" stroke-width="2.5"/>
+    ${c.sash ? '<path d="M32 38 L68 64 L62 71 L29 46Z" fill="#a85b1e" opacity=".85"/>' : ""}
+    <path d="M27 52 C22 70 23 88 27 100" stroke="${c.arm}" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M73 52 C78 70 77 88 73 100" stroke="${c.arm}" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <circle cx="27.5" cy="103" r="3.1" fill="${SKIN}"/><circle cx="72.5" cy="103" r="3.1" fill="${SKIN}"/>
+    ${headSVG(c, type)}
   </svg>`;
 }
 function renderFig(dev){
@@ -426,9 +447,9 @@ function handleJoin(name){
   const existing = devotees.find(d=>d.name===name);
   if(existing) return existing;
   let seat = SEATS.find(s=>!s.taken);
-  if(!seat && SEATS.length < 34){
+  if(!seat && SEATS.length < 36){
     /* hall expansion: one extra back row (26 -> 34 seats) before anyone is evicted */
-    [8,18,28,38,62,72,82,92].forEach(x=>SEATS.push({x, y:75, w:10, z:4, taken:null}));
+    [35,45,55,65].forEach(x=>SEATS.push({x, y:41, w:7, z:2, taken:null}));
     seat = SEATS.find(s=>!s.taken);
     if(seat) ticker("Chùa mở thêm hàng ghế phía sau — mời các sen vào lễ 🙏");
   }
@@ -519,7 +540,7 @@ function handleGift(dev, gift, ptsOverride){
         c.style.animationDelay = (i*.5)+"s"; c.style.top = (89+i*3.4)+"%"; }
       sndPop(); },
     lantern(d){ for(let i=0;i<5;i++)
-        spawnFx("🏮", SPOT.x+(Math.random()*16-8), 62+Math.random()*4, "floatUp", 3500+Math.random()*900, 25);
+        spawnFx("🏮", SPOT.x+(Math.random()*16-8), 72+Math.random()*4, "floatUp", 3500+Math.random()*900, 25);
       if(d) say(d, "Thả hoa đăng · cầu bình an 🏮", 3000); sndChime(); },
     dragon(){ const dr = $("#dragon"); dr.classList.remove("fly"); void dr.offsetWidth; dr.classList.add("fly");
       const hg = $("#haloGlow"); hg.classList.remove("boom"); void hg.offsetWidth; hg.classList.add("boom");

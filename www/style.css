@@ -32,7 +32,7 @@ body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sa
 @keyframes smokeUp{to{transform:translate(calc(-50% + var(--drift,6px)),-150%) scale(2.9);opacity:0}}
 
 /* bell */
-#bell{position:absolute;left:87.5%;top:44%;transform:translateX(-50%);z-index:8;text-align:center;cursor:pointer;width:11%}
+#bell{position:absolute;left:88.5%;top:29%;transform:translateX(-50%);z-index:8;text-align:center;cursor:pointer;width:11%}
 #bell .bellBeam{height:6px;background:linear-gradient(180deg,#8a5a20,#5d3a0d);border-radius:3px;margin-bottom:1px}
 #bell .bellBody{font-size:clamp(24px,8.5vw,38px);display:inline-block;filter:drop-shadow(0 4px 7px rgba(0,0,0,.6));transform-origin:50% -12%}
 #bell.ring .bellBody{animation:bellSwing 1.7s ease-in-out}
@@ -60,12 +60,11 @@ body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sa
 .dev.walking{transition:left 1.7s ease,top 1.7s ease,width 1.7s ease}
 .dev.walking .fig{animation:walkstep .24s ease-in-out infinite}
 @keyframes walkstep{0%,100%{transform:translateY(0) rotate(-1.8deg)}50%{transform:translateY(-3.6%) rotate(1.8deg)}}
-/* the walking figure's legs step in alternation */
-.wfig .legL,.wfig .legR{transform-box:fill-box;transform-origin:50% 6%}
-.wfig .legL{animation:legA .34s ease-in-out infinite alternate}
-.wfig .legR{animation:legB .34s ease-in-out infinite alternate}
-@keyframes legA{from{transform:rotate(14deg)}to{transform:rotate(-14deg)}}
-@keyframes legB{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+/* walking seen from above: shoe tips alternate under the robe hem */
+.wfig .shoeL{animation:shoeA .34s ease-in-out infinite alternate}
+.wfig .shoeR{animation:shoeB .34s ease-in-out infinite alternate}
+@keyframes shoeA{from{transform:translateY(-4px)}to{transform:translateY(3px)}}
+@keyframes shoeB{from{transform:translateY(3px)}to{transform:translateY(-4px)}}
 .dev.bow .fig{animation:bowDip .85s ease}
 @keyframes bowDip{35%{transform:translateY(4.5%) scaleY(.93) rotate(.8deg)}70%{transform:translateY(1%) scaleY(.985)}}
 .dev.spot .fig{filter:drop-shadow(0 0 14px rgba(255,215,110,.95)) drop-shadow(0 3px 5px rgba(0,0,0,.45))}
