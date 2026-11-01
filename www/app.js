@@ -265,13 +265,13 @@ function speakBrowser(text){
    Any failure falls back to the browser voice. */
 const ttsQ = []; let ttsPlaying = false;
 function pumpTts(){
-  if(typeof narrState !== "undefined" && narrState.audio){ setTimeout(pumpTts, 900); return; }
   if(ttsPlaying || !ttsQ.length) return;
   const text = ttsQ.shift(); ttsPlaying = true;
   const a = new Audio("/tts?text=" + encodeURIComponent(text));
-  a.onended = ()=>{ ttsPlaying = false; pumpTts(); };
-  a.onerror = ()=>{ ttsPlaying = false; speakBrowser(text); pumpTts(); };
-  a.play().catch(()=>{ ttsPlaying = false; speakBrowser(text); pumpTts(); });
+  duckNarration(true);
+  a.onended = ()=>{ ttsPlaying = false; duckNarration(false); pumpTts(); };
+  a.onerror = ()=>{ ttsPlaying = false; duckNarration(false); speakBrowser(text); pumpTts(); };
+  a.play().catch(()=>{ ttsPlaying = false; duckNarration(false); speakBrowser(text); pumpTts(); });
 }
 function speak(text){
   if(!voiceOn) return;
@@ -332,17 +332,23 @@ const narrState = { playing:false, chunks:[], idx:0, audio:null, timer:null, tit
 window.__narrLog = [];
 function narrChunks(text){
   const sents = text.split(/(?<=[.!?…])\s+/); const out = []; let cur = "";
-  for(const t of sents){ if((cur + " " + t).trim().length > 240 && cur){ out.push(cur.trim()); cur = t; } else cur = cur ? cur + " " + t : t; }
+  for(const t of sents){ if((cur + " " + t).trim().length > 200 && cur){ out.push(cur.trim()); cur = t; } else cur = cur ? cur + " " + t : t; }
   if(cur.trim()) out.push(cur.trim()); return out;
 }
 function duckMusic(on){
   try{ if(Music.gain){ const g = Music.gain.gain, t = Music.gain.context.currentTime;
     g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(on ? .15 : .5, t + .8); } }catch(e){}
 }
-function showNarr(title, text){
-  $("#narrTitle").textContent = "📿 Giảng pháp · " + title;
-  $("#narrText").textContent = text || "";
-  $("#narrBar").classList.add("show");
+let narrDucked = false;
+function duckNarration(on){
+  narrDucked = on;
+  if(narrState.audio) narrState.audio.volume = on ? 0.22 : 1;
+}
+function narrUi(){
+  const el = $("#narrStatus"); if(!el) return;
+  el.textContent = narrState.playing
+    ? `🎙️ Đang giảng: ${narrState.title} · câu ${Math.min(narrState.idx + 1, narrState.chunks.length)}/${narrState.chunks.length}${narrDucked ? " · đang nhỏ tiếng (có lời cảm ơn)" : ""}`
+    : "🎙️ Giảng pháp: đang nghỉ";
 }
 function playNarration(force){
   if(narrState.playing || !voiceOn) return;
@@ -351,19 +357,20 @@ function playNarration(force){
   narrState.playing = true; narrState.chunks = narrChunks(seg.x); narrState.idx = 0; narrState.title = seg.t;
   lastNarrAt = Date.now();
   window.__narrLog.push(seg.t);
-  showNarr(seg.t, ""); duckMusic(true); narrPump();
+  narrUi(); duckMusic(true); narrPump();
 }
 function narrPump(){
   if(!narrState.playing) return;
   if(narrState.idx >= narrState.chunks.length){ stopNarration(true); return; }
   if(ttsPlaying || speaking){ narrState.timer = setTimeout(narrPump, 700); return; }
   const chunk = narrState.chunks[narrState.idx++];
-  showNarr(narrState.title, chunk);
+  narrUi();
   let advanced = false, wd = null;
   const advance = ()=>{ if(advanced) return; advanced = true; clearTimeout(wd); narrState.audio = null; narrState.timer = setTimeout(narrPump, 350); };
   wd = setTimeout(advance, 5000 + chunk.length * 95);
   if(LIVE_MODE && !PHONE_MODE){
-    const a = new Audio("/tts?text=" + encodeURIComponent(chunk));
+    const a = new Audio("/tts?voice=male&text=" + encodeURIComponent(chunk));
+    a.volume = narrDucked ? 0.22 : 1;
     narrState.audio = a;
     a.onended = advance;
     a.onerror = ()=>narrSayBrowser(chunk, advance);
@@ -375,19 +382,23 @@ function narrSayBrowser(text, done){
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "vi-VN"; u.rate = 1.0; u.pitch = 1.02;
   const vs = speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith("vi"));
-  if(vs.length) u.voice = vs[0];
+  const male = vs.find(v=>/minh|male/i.test(v.name)) || vs[1] || vs[0];
+  if(male) u.voice = male;
   u.onend = u.onerror = done;
   speechSynthesis.speak(u);
 }
 function stopNarration(finished){
+  const wasPlaying = narrState.playing;
   narrState.playing = false; narrState.chunks = []; narrState.idx = 0;
   clearTimeout(narrState.timer);
   if(narrState.audio){ try{ narrState.audio.pause(); }catch(e){} narrState.audio = null; }
-  duckMusic(false);
-  if(finished) setTimeout(()=>{ if(!narrState.playing) $("#narrBar").classList.remove("show"); }, 3500);
-  else $("#narrBar").classList.remove("show");
+  duckMusic(false); duckNarration(false);
+  lastNarrAt = Date.now();
+  narrUi();
+  if(finished && wasPlaying && narrOn && voiceOn)
+    narrState.timer = setTimeout(()=>{ if(narrOn && voiceOn && !document.hidden && !narrState.playing) playNarration(); }, 8000);
 }
-setInterval(()=>{ if(narrOn && voiceOn && !document.hidden && devotees.some(d=>!d.leaving) && Date.now() - lastNarrAt > 300000) playNarration(); }, 15000);
+setInterval(()=>{ if(narrOn && voiceOn && !document.hidden && devotees.some(d=>!d.leaving) && Date.now() - lastNarrAt > 20000) playNarration(); }, 15000);
 
 function toggleFs(){
   if(document.fullscreenElement){ document.exitFullscreen && document.exitFullscreen().catch(()=>{}); return; }
@@ -412,7 +423,7 @@ $("#btnNarr").addEventListener("click", e=>{
   narrOn = !narrOn;
   e.currentTarget.classList.toggle("off", !narrOn);
   if(!narrOn) stopNarration();
-  else lastNarrAt = 0;
+  else playNarration();
 });
 if(!narrOn) $("#btnNarr").classList.add("off");
 

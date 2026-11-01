@@ -39,13 +39,15 @@ function googleTts(text) {
     }).on("error", reject);
   });
 }
-async function ttsMp3(text) {
-  if (ttsCache.has(text)) return ttsCache.get(text);
+const TTS_VOICE_MALE = "vi-VN-NamMinhNeural";
+async function ttsMp3(text, voice) {
+  const key = (voice || TTS_VOICE) + "|" + text;
+  if (ttsCache.has(key)) return ttsCache.get(key);
   let buf = null, edgeErr = null;
   if (MsEdgeTTS) {
     try {
       const tts = new MsEdgeTTS();
-      await tts.setMetadata(TTS_VOICE, TTS_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+      await tts.setMetadata(voice || TTS_VOICE, TTS_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
       const { audioStream } = tts.toStream(text);
       buf = await new Promise((resolve, reject) => {
         const chunks = [];
@@ -60,7 +62,7 @@ async function ttsMp3(text) {
     buf = await googleTts(text);
   }
   if (ttsCache.size > 40) ttsCache.clear();
-  ttsCache.set(text, buf);
+  ttsCache.set(key, buf);
   return buf;
 }
 
@@ -72,9 +74,12 @@ const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "
 const server = http.createServer((req, res) => {
   const p = decodeURIComponent(req.url.split("?")[0]);
   if (p === "/tts") {
-    const text = (new URL(req.url, "http://x").searchParams.get("text") || "").slice(0, 220).trim();
+    const sp = new URL(req.url, "http://x").searchParams;
+    const text = (sp.get("text") || "").slice(0, 220).trim();
     if (!text) { res.writeHead(400); return res.end(); }
-    ttsMp3(text).then(buf => {
+    /* voice=male -> giọng nam (giảng pháp); mặc định giọng nữ (cảm ơn) */
+    const voice = sp.get("voice") === "male" ? TTS_VOICE_MALE : TTS_VOICE;
+    ttsMp3(text, voice).then(buf => {
       res.writeHead(200, { "Content-Type": "audio/mpeg", "Cache-Control": "no-store" });
       res.end(buf);
     }).catch(e => { console.log("[TTS]", e.message); res.writeHead(502); res.end(); });

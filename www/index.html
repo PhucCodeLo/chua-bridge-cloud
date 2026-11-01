@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Chùa Online · TikTok LIVE v1.5.1</title>
+<title>Chùa Online · TikTok LIVE v1.6.0</title>
 <meta name="description" content="Chùa online phong cách điện ảnh: điện thờ thật, phật tử áo tràng vào lễ, tặng quà thắp hương thỉnh chuông qua TikTok LIVE.">
 <link rel="stylesheet" href="style.css?v=25">
 <link rel="manifest" href="manifest.webmanifest">
@@ -48,7 +48,7 @@
 
     <header id="topbar">
       <div class="title">Chùa Online</div>
-      <div class="sub">🙏 <b id="devCount">0</b> phật tử đang lễ &nbsp;✦&nbsp; Công đức: <b id="congduc">0</b> &nbsp;✦&nbsp; <span class="ver">v1.5.1</span></div>
+      <div class="sub">🙏 <b id="devCount">0</b> phật tử đang lễ &nbsp;✦&nbsp; Công đức: <b id="congduc">0</b> &nbsp;✦&nbsp; <span class="ver">v1.6.0</span></div>
     </header>
 
     <!-- thank-you banner when a gift arrives -->
@@ -56,9 +56,6 @@
       <div id="thanksTitle">🙏 Cảm ơn sen</div>
       <div id="thanksSub"></div>
     </div>
-
-    <!-- dharma narration subtitle -->
-    <div id="narrBar"><div id="narrTitle"></div><div id="narrText"></div></div>
 
     <!-- stage sound controls -->
     <div class="stageCtl">
@@ -115,6 +112,8 @@
         <button id="btnTestNarr" class="simBtn">🎙️ Giảng pháp ngay</button>
         <button id="btnTestBow" class="simBtn">🙇 Tất cả khấn vái</button>
       </div>
+      <div class="trow"><span id="narrStatus">🎙️ Giảng pháp: đang nghỉ</span>
+      </div>
       <p class="thint">Cách test nhanh: (1) gõ bình luận <b>sư</b> rồi bấm Gửi → nhân vật biến thành sư thầy; thử tiếp <b>nữ</b>, <b>bà</b>, <b>tiểu</b>, <b>nam</b>. (2) Gõ một lời nguyện (vd "cầu cho mẹ mau khỏe") → Gửi, rồi chọn quà từ 20 công đức → bấm Tặng quà: banner + giọng đọc sẽ <b>hồi hướng đúng lời nguyện đó</b>. (3) Bấm <b>Thả tim</b> → tim bay trên đầu nhân vật. (4) Bấm <b>Thêm 8 người</b> vài lần cho đầy 30 ghế → chùa tự mở thêm hàng ghế phía sau.</p>
     </div>
     <div class="simRow">
@@ -129,7 +128,7 @@
     Khi nối TikTok thật, các nút giả lập được thay bằng event vào phòng / comment / quà thật từ LIVE — nhạc và giọng cảm ơn chạy chung trên máy phát, trộn thẳng vào luồng live.</p>
   </section>
 </div>
-<script src="app.js?v=34"></script>
+<script src="app.js?v=35"></script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module" src="three3d.js?v=7"></script>
 </body>
