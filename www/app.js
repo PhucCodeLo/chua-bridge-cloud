@@ -343,6 +343,7 @@ let narrDucked = false;
 function duckNarration(on){
   narrDucked = on;
   if(narrState.audio) narrState.audio.volume = on ? 0.22 : 1;
+  narrUi();
 }
 function narrUi(){
   const el = $("#narrStatus"); if(!el) return;
