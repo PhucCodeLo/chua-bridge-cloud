@@ -26,7 +26,7 @@ const GIFTS = [
   {id:"thienha",icon:"🌌", name:"Thiên hà",     act:"Rồng Vàng hộ pháp",   pts:1199,fx:"dragon"},
 ];
 /* anchors (% of stage) measured on the backdrop art */
-const A = { buddha:{x:50,y:11}, burner:{x:50,y:57}, smoke:{x:50,y:50},
+const A = { buddha:{x:50,y:11}, burner:{x:50,y:40}, smoke:{x:50,y:33},
             candleL:{x:44,y:20}, candleR:{x:56,y:20},
             fruitL:{x:46,y:25}, fruitR:{x:54,y:25}, vaseL:{x:36,y:14}, vaseR:{x:64,y:14},
             bell:{x:88.5,y:31} };
@@ -43,7 +43,7 @@ const ROWS = [
 ];
 const SEATS = [];
 ROWS.forEach(r=>{ r.xs.forEach(x=>SEATS.push({x, y:r.y, w:r.w, z:r.z, taken:null})); });
-const SPOT = {x:50, y:71.5, w:15.5};
+const SPOT = {x:50, y:54, w:15.5};
 
 let devotees = [], congduc = 0; const boardMap = new Map(), usedNames = new Set();
 /* Avatar types: comment one word (nam / nữ / sư / ni / bà / tiểu / cao tăng)
@@ -120,9 +120,17 @@ function figureWalkSVG(type){
     ${headSVG(c, type)}
   </svg>`;
 }
-function renderFig(dev){
-  dev.fig.innerHTML = dev.el.classList.contains("walking") ? figureWalkSVG(dev.type) : figureSVG(dev.type);
+const BOW_SPRITES = { woman:1, man:1, monk:1, nun:1 };
+function spriteImg(type, pose){
+  if (pose === "bow" && !BOW_SPRITES[type]) pose = "sit";
+  return `<img class="spr" src="assets/sp-${type}-${pose}.webp" alt="" draggable="false">`;
 }
+function renderFig(dev){
+  const pose = dev.pose === "bow" ? "bow" : dev.el.classList.contains("walking") ? "stand" : "sit";
+  dev.fig.innerHTML = spriteImg(dev.type, pose);
+}
+["woman","man","monk","nun","elder","child"].forEach(t =>
+  ["sit","stand","bow"].forEach(p => { const i = new Image(); i.src = `assets/sp-${t}-${p}.webp`; }));
 const AVATAR_WORDS = { "nam": "man", "nữ": "woman", "nu": "woman", "sư": "monk", "su": "monk",
                        "ni": "nun", "bà": "elder", "ba": "elder", "tiểu": "child", "tieu": "child",
                        "cao tăng": "monk", "cao tang": "monk" };
@@ -350,7 +358,7 @@ function makeDev(name, seat, instant){
   const type = Math.random() < .5 ? "woman" : "man";
   el.innerHTML = `<div class="bubble"></div>
     <div class="chip" style="--av:${av}"><span class="ava">${name.trim()[0]}</span><span class="cname">${name}</span><span class="cpts"></span></div>
-    <div class="shadow"></div><div class="fig">${instant ? figureSVG(type) : figureWalkSVG(type)}</div>`;
+    <div class="shadow"></div><div class="fig">${spriteImg(type, instant ? "sit" : "stand")}</div>`;
   const fig = el.querySelector(".fig");
   fig.style.animationDuration = (6.5 + Math.random()*4).toFixed(1) + "s";
   fig.style.animationDelay = (-Math.random()*8).toFixed(1) + "s";
@@ -366,7 +374,7 @@ function makeDev(name, seat, instant){
   if(!instant){
     el.classList.add("walking");
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.left = seat.x+"%"; el.style.top = seat.y+"%"; }));
-    setTimeout(()=>{ el.classList.remove("walking"); dev.fig.innerHTML = figureSVG(dev.type); bow(dev); }, 1750);
+    setTimeout(()=>{ el.classList.remove("walking"); renderFig(dev); bow(dev); }, 1750);
   }
   updateTop(); return dev;
 }
@@ -398,11 +406,14 @@ function perform(dev, fn, holdMs=1400){
   setTimeout(()=>{
     dev.el.classList.remove("walking"); renderFig(dev);
     fn && fn(dev); bow(dev);
+    const hasBow = !!BOW_SPRITES[dev.type];
+    if (hasBow){ dev.pose = "bow"; renderFig(dev); }
     for(let i=0;i<5;i++) spawnFx("🌸", 24+Math.random()*52, 4+Math.random()*8, "fallDown", 2600+Math.random()*900, 19);
     const doZoom = !camBusy && Date.now() - lastZoomAt > 9000;
-    if(doZoom){ camBusy = true; lastZoomAt = Date.now(); zoomTo(dev); dev.el.classList.add("prostrate"); }
+    if(doZoom){ camBusy = true; lastZoomAt = Date.now(); zoomTo(dev); if(!hasBow) dev.el.classList.add("prostrate"); }
     setTimeout(()=>{
       if(doZoom){ zoomOut(); dev.el.classList.remove("prostrate"); setTimeout(()=>{ camBusy = false; }, 1400); }
+      dev.pose = null;
       dev.el.classList.add("walking"); renderFig(dev);
       dev.el.style.left = dev.home.x+"%"; dev.el.style.top = dev.home.y+"%"; dev.el.style.width = dev.home.w+"%";
       setTimeout(()=>{ dev.el.classList.remove("walking"); renderFig(dev);
@@ -467,7 +478,7 @@ function handleJoin(name){
   let seat = SEATS.find(s=>!s.taken);
   if(!seat && SEATS.length < 36){
     /* hall expansion: one extra back row (26 -> 34 seats) before anyone is evicted */
-    [35,45,55,65].forEach(x=>SEATS.push({x, y:41, w:7, z:2, taken:null}));
+    [25,33,67,75].forEach(x=>SEATS.push({x, y:41, w:7, z:2, taken:null}));
     seat = SEATS.find(s=>!s.taken);
     if(seat) ticker("Chùa mở thêm hàng ghế phía sau — mời các sen vào lễ 🙏");
   }

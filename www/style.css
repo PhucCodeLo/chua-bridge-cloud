@@ -23,10 +23,10 @@ body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sa
 #cgL{left:33%}#cgR{left:67%;animation-delay:.5s}
 @keyframes flick{from{opacity:.65}to{opacity:1}}
 .candleGlow.big{width:24%;background:radial-gradient(ellipse,rgba(255,205,100,.85),transparent 70%)}
-#burnerGlow{position:absolute;left:50%;top:61.2%;width:16%;aspect-ratio:1.6;transform:translate(-50%,-50%);border-radius:50%;
+#burnerGlow{position:absolute;left:50%;top:40%;width:16%;aspect-ratio:1.6;transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(ellipse,rgba(255,150,50,.4),transparent 70%);pointer-events:none;transition:opacity .4s;opacity:.7}
 #burnerGlow.big{opacity:1;background:radial-gradient(ellipse,rgba(255,170,60,.75),transparent 70%)}
-#smoke{position:absolute;left:50%;top:56.5%;width:14%;height:17%;transform:translateX(-50%);pointer-events:none;z-index:3}
+#smoke{position:absolute;left:50%;top:28.5%;width:14%;height:17%;transform:translateX(-50%);pointer-events:none;z-index:3}
 .puff{position:absolute;bottom:0;left:50%;width:34%;aspect-ratio:1;border-radius:50%;
   background:radial-gradient(circle,rgba(255,255,255,.8),rgba(255,255,255,0) 70%);animation:smokeUp 3.6s ease-out forwards}
 @keyframes smokeUp{to{transform:translate(calc(-50% + var(--drift,6px)),-150%) scale(2.9);opacity:0}}
@@ -41,9 +41,10 @@ body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sa
 /* devotees */
 #floorLayer{position:absolute;inset:0;z-index:5;will-change:transform}
 .dev{position:absolute;transform:translate(-50%,-100%);transition:left 1.15s ease,top 1.15s ease,width 1.15s ease;cursor:pointer}
-.fig{width:100%;transform-origin:50% 97%;animation:praybow 8s ease-in-out infinite;
+.fig{width:118%;margin-left:-9%;transform-origin:50% 97%;animation:praybow 8s ease-in-out infinite;
   filter:drop-shadow(0 3px 5px rgba(0,0,0,.45))}
 .fig svg{display:block;width:100%}
+.fig img.spr{display:block;width:100%}
 /* idle prayer: a gentle sway, then one deep bow (khấn vái) each cycle —
    every devotee runs their own duration/delay, so the hall never bows in sync */
 @keyframes praybow{
@@ -51,7 +52,7 @@ body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sa
   10%{transform:rotate(1.1deg)} 20%{transform:rotate(-1.1deg)}
   30%{transform:rotate(.8deg)} 40%{transform:rotate(-.7deg)}
   54%{transform:rotate(0deg) translateY(0) scaleY(1)}
-  62%,84%{transform:rotate(0deg) translateY(8.5%) scaleY(.84)}
+  62%,84%{transform:rotate(0deg) translateY(3.5%) scaleY(.95)}
   94%{transform:rotate(0deg) translateY(0) scaleY(1)}}
 /* test/demo: a slow, deep group bow so the motion is unmistakable */
 .dev.bigbow .fig{animation:bigbow 2.6s ease-in-out}
