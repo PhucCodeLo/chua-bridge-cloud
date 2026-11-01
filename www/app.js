@@ -265,6 +265,7 @@ function speakBrowser(text){
    Any failure falls back to the browser voice. */
 const ttsQ = []; let ttsPlaying = false;
 function pumpTts(){
+  if(typeof narrState !== "undefined" && narrState.audio){ setTimeout(pumpTts, 900); return; }
   if(ttsPlaying || !ttsQ.length) return;
   const text = ttsQ.shift(); ttsPlaying = true;
   const a = new Audio("/tts?text=" + encodeURIComponent(text));
@@ -309,6 +310,85 @@ function showVerse(){
   ringBell(false);
   speak(line);
 }
+/* ---------- dharma narration: a calm voice talking about Phật pháp
+   under the music, so a live stream is never silent. Original short
+   talks in rotation; gift thanks interleave between sentences, the
+   music dips while the voice speaks, and each sentence shows as a
+   subtitle at the bottom of the stage. ---------- */
+const NARRATIONS = [
+ {t:"Hơi thở an lành", x:"Mời bạn cùng trở về với hơi thở của chính mình. Hít vào, biết mình đang hít vào. Thở ra, biết mình đang thở ra. Chỉ cần vài nhịp thở chậm, tâm trí đang xao động cũng dần lắng xuống, như mặt hồ thôi gợn sóng. Đức Phật dạy, hơi thở là chiếc neo giữ ta ở lại với giây phút hiện tại, nơi duy nhất mà bình an thật sự có mặt. Dù bạn đang ở đâu, đang làm gì, chỉ cần nhớ quay về với hơi thở, là bạn đã có một ngôi chùa nhỏ bình yên ngay trong lòng mình."},
+ {t:"Vô thường", x:"Đức Phật dạy rằng, mọi thứ trên đời đều vô thường, không có gì đứng yên mãi mãi. Hoa nở rồi tàn, trăng tròn rồi khuyết, và những buồn vui trong lòng ta cũng vậy, đến rồi đi như mây qua trời. Hiểu được vô thường, ta thôi níu giữ những điều đã qua, và cũng không còn quá sợ hãi ngày mai chưa tới. Ta học cách trân trọng từng khoảnh khắc đang có, thương người bên cạnh nhiều hơn, và sống nhẹ nhàng hơn. Vô thường không đáng sợ. Vô thường chính là cơ hội để mọi điều tốt đẹp bắt đầu lại từ đầu."},
+ {t:"Nhân quả", x:"Người xưa có câu, gieo nhân nào gặt quả nấy. Mỗi lời nói, mỗi việc làm, mỗi ý nghĩ của ta hôm nay đều là một hạt giống gieo xuống mảnh đất đời mình. Gieo hạt lành bằng sự tử tế, chân thành, ta sẽ gặt về niềm tin và yêu thương. Gieo hạt xấu bằng dối trá, sân hận, quả đắng sớm muộn cũng tìm về. Hiểu nhân quả không phải để sợ hãi, mà để sống có trách nhiệm hơn với chính mình. Muốn đời mình đổi khác, hãy bắt đầu từ một hạt giống lành nhỏ bé ngay trong hôm nay."},
+ {t:"Buông xả", x:"Có những muộn phiền ta ôm giữ quá lâu, như người nắm chặt một hòn than nóng mà mong người khác bị bỏng, trong khi tay mình đau trước tiên. Buông xả không có nghĩa là quên hết hay thua cuộc. Buông xả là đặt gánh nặng xuống để lòng mình được nhẹ, là tha thứ cho người và cũng tha thứ cho chính mình. Chuyện đã qua, hãy để nó qua như nước chảy qua cầu. Khi bàn tay mở ra, ta mới có thể đón nhận những điều tốt đẹp đang chờ phía trước."},
+ {t:"Từ bi", x:"Từ bi là món quà lớn nhất ta có thể tặng cho đời, và cũng là món quà ta tự tặng cho chính mình. Một lời nói nhẹ nhàng có thể sưởi ấm một trái tim đang lạnh. Một việc làm nhỏ có thể nâng đỡ một người đang chênh vênh. Khi ta thương người, lòng ta tự nhiên rộng mở, và niềm vui đến nhẹ nhàng như nắng sớm. Đức Phật dạy, lấy từ bi hóa giải hận thù, như lấy nước mát dập tắt lửa. Mong bạn luôn giữ trong tim một đóa sen từ bi, nở giữa đời thường nhiều bận rộn."},
+ {t:"Biết đủ", x:"Có câu, biết đủ là giàu. Nhiều khi ta khổ không phải vì thiếu thốn, mà vì luôn nhìn sang phần của người khác. Người biết đủ uống chén trà cũng thấy ngon, ngắm mây chiều cũng thấy đẹp, bữa cơm đạm bạc bên gia đình cũng thấy ấm lòng. Biết đủ không phải là thôi cố gắng, mà là biết trân trọng những gì mình đang có trong lúc bước tiếp. Khi lòng thôi đòi hỏi quá nhiều, bình an tự nhiên tìm về, và hạnh phúc hóa ra ở rất gần, ngay trong những điều giản dị nhất quanh ta."},
+ {t:"Hiếu đạo", x:"Trong đạo Phật, hiếu thảo với cha mẹ là phước đức lớn nhất. Cha mẹ là hai vị Phật sống trong nhà, là người đã dành cả đời che chở cho ta. Một lời hỏi thăm, một bữa cơm sum vầy, một cái nắm tay lúc cha mẹ già yếu, đôi khi quý hơn mọi lễ vật xa hoa. Nếu cha mẹ còn, xin đừng đợi đến khi quá muộn mới nói lời yêu thương. Nếu cha mẹ đã đi xa, hãy sống thật tử tế, thật lương thiện, đó chính là nén hương lòng thành kính nhất dâng lên người."},
+ {t:"Hóa giải sân hận", x:"Khi cơn giận nổi lên, Đức Phật khuyên ta hãy dừng lại, thở sâu và nhìn vào lòng mình như nhìn một đứa trẻ đang khóc. Cơn giận giống như đám mây đen, nó che khuất bầu trời trong xanh vốn luôn ở đó. Một lời nói lúc nóng giận có thể làm đau người thương suốt nhiều năm, còn một phút nhẫn nhịn có thể giữ lại cả một mái ấm. Ta không thắng được cơn giận bằng cách giận hơn. Ta thắng nó bằng sự hiểu biết và lòng thương. Mây rồi sẽ tan, và trời lại sáng trong."},
+ {t:"Tĩnh lặng", x:"Giữa cuộc sống ồn ào, tĩnh lặng là một món quà quý giá. Tĩnh lặng không có nghĩa là trốn chạy cuộc đời, mà là trở về chăm sóc khu vườn trong tâm mình. Mỗi ngày, chỉ cần vài phút ngồi yên, nghe tiếng chuông, nghe hơi thở, ta sẽ thấy lòng mình lắng lại như nước trong hồ thu. Tâm tĩnh thì trí sáng, lòng an thì lời nói và việc làm cũng trở nên nhẹ nhàng. Mong bạn tìm được một góc tĩnh lặng cho riêng mình, để mỗi lần trở về, bạn lại đầy ắp năng lượng an lành."},
+ {t:"Ngày mới an lành", x:"Mỗi buổi sớm mai là một khởi đầu mới mà cuộc đời trao tặng. Chuyện hôm qua, dù vui hay buồn, xin hãy để lại phía sau như sương tan trong nắng. Hôm nay, ta có thể mỉm cười nhiều hơn một chút, nói lời tử tế hơn một chút, và sống chậm lại một chút để kịp nhìn thấy những điều tốt đẹp quanh mình. Đừng chờ đến khi mọi thứ hoàn hảo mới cho phép mình hạnh phúc. Bình an không nằm ở cuối con đường. Bình an nằm trong từng bước chân ta đi, ngay lúc này, ngay tại đây."}
+];
+let narrOn = LIVE_MODE, narrIdx = 0, lastNarrAt = Date.now() - 225000;
+const narrState = { playing:false, chunks:[], idx:0, audio:null, timer:null, title:"" };
+window.__narrLog = [];
+function narrChunks(text){
+  const sents = text.split(/(?<=[.!?…])\s+/); const out = []; let cur = "";
+  for(const t of sents){ if((cur + " " + t).trim().length > 240 && cur){ out.push(cur.trim()); cur = t; } else cur = cur ? cur + " " + t : t; }
+  if(cur.trim()) out.push(cur.trim()); return out;
+}
+function duckMusic(on){
+  try{ if(Music.gain){ const g = Music.gain.gain, t = Music.gain.context.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(on ? .15 : .5, t + .8); } }catch(e){}
+}
+function showNarr(title, text){
+  $("#narrTitle").textContent = "📿 Giảng pháp · " + title;
+  $("#narrText").textContent = text || "";
+  $("#narrBar").classList.add("show");
+}
+function playNarration(force){
+  if(narrState.playing || !voiceOn) return;
+  if(!narrOn && !force) return;
+  const seg = NARRATIONS[narrIdx++ % NARRATIONS.length];
+  narrState.playing = true; narrState.chunks = narrChunks(seg.x); narrState.idx = 0; narrState.title = seg.t;
+  lastNarrAt = Date.now();
+  window.__narrLog.push(seg.t);
+  showNarr(seg.t, ""); duckMusic(true); narrPump();
+}
+function narrPump(){
+  if(!narrState.playing) return;
+  if(narrState.idx >= narrState.chunks.length){ stopNarration(true); return; }
+  if(ttsPlaying || speaking){ narrState.timer = setTimeout(narrPump, 700); return; }
+  const chunk = narrState.chunks[narrState.idx++];
+  showNarr(narrState.title, chunk);
+  let advanced = false, wd = null;
+  const advance = ()=>{ if(advanced) return; advanced = true; clearTimeout(wd); narrState.audio = null; narrState.timer = setTimeout(narrPump, 350); };
+  wd = setTimeout(advance, 5000 + chunk.length * 95);
+  if(LIVE_MODE && !PHONE_MODE){
+    const a = new Audio("/tts?text=" + encodeURIComponent(chunk));
+    narrState.audio = a;
+    a.onended = advance;
+    a.onerror = ()=>narrSayBrowser(chunk, advance);
+    a.play().catch(()=>narrSayBrowser(chunk, advance));
+  } else narrSayBrowser(chunk, advance);
+}
+function narrSayBrowser(text, done){
+  if(!("speechSynthesis" in window)){ done(); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "vi-VN"; u.rate = 1.0; u.pitch = 1.02;
+  const vs = speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith("vi"));
+  if(vs.length) u.voice = vs[0];
+  u.onend = u.onerror = done;
+  speechSynthesis.speak(u);
+}
+function stopNarration(finished){
+  narrState.playing = false; narrState.chunks = []; narrState.idx = 0;
+  clearTimeout(narrState.timer);
+  if(narrState.audio){ try{ narrState.audio.pause(); }catch(e){} narrState.audio = null; }
+  duckMusic(false);
+  if(finished) setTimeout(()=>{ if(!narrState.playing) $("#narrBar").classList.remove("show"); }, 3500);
+  else $("#narrBar").classList.remove("show");
+}
+setInterval(()=>{ if(narrOn && voiceOn && !document.hidden && devotees.some(d=>!d.leaving) && Date.now() - lastNarrAt > 300000) playNarration(); }, 15000);
+
 function toggleFs(){
   if(document.fullscreenElement){ document.exitFullscreen && document.exitFullscreen().catch(()=>{}); return; }
   if(document.documentElement.requestFullscreen){
@@ -326,7 +406,15 @@ $("#btnVoice").addEventListener("click", e=>{
   voiceOn = !voiceOn;
   e.currentTarget.classList.toggle("off", !voiceOn);
   if(!voiceOn && "speechSynthesis" in window){ speechSynthesis.cancel(); speechQ.length = 0; ttsQ.length = 0; speaking = false; }
+  if(!voiceOn) stopNarration();
 });
+$("#btnNarr").addEventListener("click", e=>{
+  narrOn = !narrOn;
+  e.currentTarget.classList.toggle("off", !narrOn);
+  if(!narrOn) stopNarration();
+  else lastNarrAt = 0;
+});
+if(!narrOn) $("#btnNarr").classList.add("off");
 
 /* ---------- fx helpers ---------- */
 function spawnFx(txt, xPct, yPct, anim, dur=2600, sizePx=26){
@@ -915,6 +1003,7 @@ if(TEST_MODE && $("#testPanel")){
   $("#btnTestGift").addEventListener("click", ()=>{ const g = GIFTS.find(x=>x.id === giftSel.value); const d = findOrJoin(tName()); if(d && g) handleGift(d, g); });
   $("#btnTestFill").addEventListener("click", ()=>{ for(let i=0;i<8;i++) handleJoin(); });
   $("#btnTestVerse").addEventListener("click", ()=>showVerse());
+  $("#btnTestNarr").addEventListener("click", ()=>playNarration(true));
   $("#btnTestBow").addEventListener("click", ()=>bowAll());
 }
 
