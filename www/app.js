@@ -29,7 +29,7 @@ const GIFTS = [
 const A = { buddha:{x:50,y:29}, burner:{x:50,y:51}, smoke:{x:50,y:45},
             candleL:{x:43,y:49.5}, candleR:{x:57,y:49.5},
             fruitL:{x:37.5,y:51.5}, fruitR:{x:62.5,y:51.5}, vaseL:{x:32,y:44}, vaseR:{x:68,y:44},
-            bell:{x:88.5,y:44} };
+            bell:{x:88.5,y:46} };
 /* seats: rows back->front {feetY %, width %, xs[]}. Back rows spread wider
    (8 across) and the front row keeps only 4 large figures flanking the
    carpet — the hall reads wide instead of two bunched columns. */
