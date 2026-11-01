@@ -327,7 +327,7 @@ const NARRATIONS = [
  {t:"Tĩnh lặng", x:"Giữa cuộc sống ồn ào, tĩnh lặng là một món quà quý giá. Tĩnh lặng không có nghĩa là trốn chạy cuộc đời, mà là trở về chăm sóc khu vườn trong tâm mình. Mỗi ngày, chỉ cần vài phút ngồi yên, nghe tiếng chuông, nghe hơi thở, ta sẽ thấy lòng mình lắng lại như nước trong hồ thu. Tâm tĩnh thì trí sáng, lòng an thì lời nói và việc làm cũng trở nên nhẹ nhàng. Mong bạn tìm được một góc tĩnh lặng cho riêng mình, để mỗi lần trở về, bạn lại đầy ắp năng lượng an lành."},
  {t:"Ngày mới an lành", x:"Mỗi buổi sớm mai là một khởi đầu mới mà cuộc đời trao tặng. Chuyện hôm qua, dù vui hay buồn, xin hãy để lại phía sau như sương tan trong nắng. Hôm nay, ta có thể mỉm cười nhiều hơn một chút, nói lời tử tế hơn một chút, và sống chậm lại một chút để kịp nhìn thấy những điều tốt đẹp quanh mình. Đừng chờ đến khi mọi thứ hoàn hảo mới cho phép mình hạnh phúc. Bình an không nằm ở cuối con đường. Bình an nằm trong từng bước chân ta đi, ngay lúc này, ngay tại đây."}
 ];
-let narrOn = LIVE_MODE, narrIdx = 0, lastNarrAt = Date.now() - 225000;
+let narrOn = false, narrIdx = 0, lastNarrAt = Date.now() - 225000;  /* narrOn is set from LIVE_MODE below, where LIVE_MODE is declared */
 const narrState = { playing:false, chunks:[], idx:0, audio:null, timer:null, title:"" };
 window.__narrLog = [];
 function narrChunks(text){
@@ -729,6 +729,8 @@ addEventListener("pointerup", ()=>{ dragX = null; });
 const QS = new URLSearchParams(location.search);
 const PHONE_MODE = QS.has("phone");
 const LIVE_MODE = QS.has("live") || PHONE_MODE;
+narrOn = LIVE_MODE;   /* dharma narration defaults ON for live streams */
+{ const nb = $("#btnNarr"); if(nb) nb.classList.toggle("off", !narrOn); }
 const TT_GIFT_NAME = { "rose":"huong", "tiktok":"huong", "finger heart":"nen", "heart":"nen",
   "bouquet":"hoasen", "flower bouquet":"hoasen", "wreath":"hoasen", "donut":"chuong", "doughnut":"chuong",
   "hand heart":"nguqua", "heart me":"nguqua", "corgi":"ca", "money gun":"dang",
