@@ -26,23 +26,23 @@ const GIFTS = [
   {id:"thienha",icon:"🌌", name:"Thiên hà",     act:"Rồng Vàng hộ pháp",   pts:1199,fx:"dragon"},
 ];
 /* anchors (% of stage) measured on the backdrop art */
-const A = { buddha:{x:50,y:29}, burner:{x:50,y:51}, smoke:{x:50,y:45},
-            candleL:{x:43,y:49.5}, candleR:{x:57,y:49.5},
-            fruitL:{x:37.5,y:51.5}, fruitR:{x:62.5,y:51.5}, vaseL:{x:32,y:44}, vaseR:{x:68,y:44},
-            bell:{x:88.5,y:46} };
+const A = { buddha:{x:50,y:30.5}, burner:{x:50,y:50.4}, smoke:{x:50,y:45},
+            candleL:{x:43,y:49}, candleR:{x:57,y:49},
+            fruitL:{x:37.5,y:50.8}, fruitR:{x:62.5,y:50.8}, vaseL:{x:32,y:44.1}, vaseR:{x:68,y:44.1},
+            bell:{x:88.5,y:45.9} };
 /* seats: rows back->front {feetY %, width %, xs[]}. Back rows spread wider
    (8 across) and the front row keeps only 4 large figures flanking the
    carpet — the hall reads wide instead of two bunched columns. */
 const ROWS = [
-  {y:69,   w:7,    z:3, xs:[24, 33, 41.5, 58.5, 67, 76]},
-  {y:75,   w:8.5,  z:4, xs:[21.5, 31.5, 41, 59, 68.5, 78.5]},
-  {y:81.5, w:10,   z:5, xs:[19, 30, 41, 59, 70, 81]},
-  {y:88,   w:11.5, z:6, xs:[17, 29, 41, 59, 71, 83]},
-  {y:94.5, w:13,   z:7, xs:[15.5, 28, 41.5, 58.5, 72, 84.5]},
+  {y:66.7, w:7,    z:3, xs:[24, 33, 41.5, 58.5, 67, 76]},
+  {y:72.1, w:8.5,  z:4, xs:[21.5, 31.5, 41, 59, 68.5, 78.5]},
+  {y:78,   w:10,   z:5, xs:[19, 30, 41, 59, 70, 81]},
+  {y:83.8, w:11.5, z:6, xs:[17, 29, 41, 59, 71, 83]},
+  {y:89.7, w:13,   z:7, xs:[15.5, 28, 41.5, 58.5, 72, 84.5]},
 ];
 const SEATS = [];
 ROWS.forEach(r=>{ r.xs.forEach(x=>SEATS.push({x, y:r.y, w:r.w, z:r.z, taken:null})); });
-const SPOT = {x:50, y:66.5, w:12};
+const SPOT = {x:50, y:64.4, w:12};
 
 let devotees = [], congduc = 0; const boardMap = new Map(), usedNames = new Set();
 /* Avatar types: comment one word (nam / nữ / sư / ni / bà / tiểu / cao tăng)
@@ -442,32 +442,15 @@ function stopNarration(finished){
 }
 setInterval(()=>{ if(narrOn && voiceOn && !document.hidden && devotees.some(d=>!d.leaving) && Date.now() - lastNarrAt > 20000) playNarration(); }, 15000);
 
-function toggleFs(){
-  if(document.fullscreenElement){ document.exitFullscreen && document.exitFullscreen().catch(()=>{}); return; }
-  if(document.documentElement.requestFullscreen){
-    document.documentElement.requestFullscreen().catch(()=>{});
-    if(screen.orientation && screen.orientation.lock) screen.orientation.lock("portrait").catch(()=>{});
-  }
+/* stage toggles — the on-screen icon column is gone (clean broadcast
+   view); admin.html flips these through the command channel */
+function setMusic(on){ musicWanted = on; if(on) Music.start(); else Music.stop(); }
+function setVoice(on){
+  voiceOn = on;
+  if(!on && "speechSynthesis" in window){ speechSynthesis.cancel(); speechQ.length = 0; ttsQ.length = 0; speaking = false; }
+  if(!on) stopNarration();
 }
-$("#btnFs").addEventListener("click", e=>{ e.stopPropagation(); toggleFs(); });
-$("#btnMusic").addEventListener("click", e=>{
-  musicWanted = !musicWanted;
-  e.currentTarget.classList.toggle("off", !musicWanted);
-  if(musicWanted) Music.start(); else Music.stop();
-});
-$("#btnVoice").addEventListener("click", e=>{
-  voiceOn = !voiceOn;
-  e.currentTarget.classList.toggle("off", !voiceOn);
-  if(!voiceOn && "speechSynthesis" in window){ speechSynthesis.cancel(); speechQ.length = 0; ttsQ.length = 0; speaking = false; }
-  if(!voiceOn) stopNarration();
-});
-$("#btnNarr").addEventListener("click", e=>{
-  narrOn = !narrOn;
-  e.currentTarget.classList.toggle("off", !narrOn);
-  if(!narrOn) stopNarration();
-  else playNarration();
-});
-if(!narrOn) $("#btnNarr").classList.add("off");
+function setNarr(on){ narrOn = on; if(!on) stopNarration(); else playNarration(); }
 
 /* ---------- fx helpers ---------- */
 function spawnFx(txt, xPct, yPct, anim, dur=2600, sizePx=26){
@@ -619,7 +602,7 @@ function handleJoin(name){
   let seat = SEATS.find(s=>!s.taken);
   if(!seat && SEATS.length < 36){
     /* hall expansion: one extra back row (26 -> 34 seats) before anyone is evicted */
-    [18.5,81.5].forEach(x=>SEATS.push({x, y:65.5, w:6.5, z:2, taken:null}));
+    [18.5,81.5].forEach(x=>SEATS.push({x, y:63.5, w:6.5, z:2, taken:null}));
     seat = SEATS.find(s=>!s.taken);
     if(seat) ticker("Chùa mở thêm hàng ghế phía sau — mời các sen vào lễ 🙏");
   }
@@ -773,7 +756,7 @@ const QS = new URLSearchParams(location.search);
 const PHONE_MODE = QS.has("phone");
 const LIVE_MODE = QS.has("live") || PHONE_MODE;
 narrOn = LIVE_MODE;   /* dharma narration defaults ON for live streams */
-{ const nb = $("#btnNarr"); if(nb) nb.classList.toggle("off", !narrOn); }
+
 const TT_GIFT_NAME = { "rose":"huong", "tiktok":"huong", "finger heart":"nen", "heart":"nen",
   "bouquet":"hoasen", "flower bouquet":"hoasen", "wreath":"hoasen", "donut":"chuong", "doughnut":"chuong",
   "hand heart":"nguqua", "heart me":"nguqua", "corgi":"ca", "money gun":"dang",
@@ -1082,9 +1065,9 @@ function admCmd(name, a){
   else if(name === "verse") showVerse();
   else if(name === "narrNow") playNarration(true);
   else if(name === "narrStop") stopNarration();
-  else if(name === "narrSet"){ const on = !!a.on; if(on !== narrOn){ narrOn = on; $("#btnNarr")?.classList.toggle("off", !narrOn); if(!narrOn) stopNarration(); else playNarration(); } }
-  else if(name === "musicSet"){ if(!!a.on !== musicWanted) $("#btnMusic").click(); }
-  else if(name === "voiceSet"){ if(!!a.on !== voiceOn) $("#btnVoice").click(); }
+  else if(name === "narrSet"){ if(!!a.on !== narrOn) setNarr(!!a.on); }
+  else if(name === "musicSet"){ if(!!a.on !== musicWanted) setMusic(!!a.on); }
+  else if(name === "voiceSet"){ if(!!a.on !== voiceOn) setVoice(!!a.on); }
   else if(name === "autoSet") setAuto(!!a.on);
   else if(name === "bell") ringBell(true);
   else if(name === "bow") bowAll();

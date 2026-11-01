@@ -80,18 +80,18 @@ async function init(){
 
   /* ---------- seats: same map as the 2D hall, projected to the floor ---- */
   const ROWS = [
-    {y:47,   xs:[29, 39, 61, 71]},
-    {y:56,   xs:[24, 34.5, 65.5, 76]},
-    {y:67.5, xs:[20, 31, 42, 58, 69, 80]},
-    {y:75.5, xs:[18.5, 30.5, 42.5, 54.5, 66.5, 78.5]},
-    {y:85,   xs:[17, 30, 43, 56, 69, 82]},
-    {y:93.5, xs:[15.5, 29, 42.5, 56, 69.5, 83]},
-    {y:41,   xs:[35, 45, 55, 65]},
+    {y:47.8,   xs:[29, 39, 61, 71]},
+    {y:55.4,   xs:[24, 34.5, 65.5, 76]},
+    {y:65.3, xs:[20, 31, 42, 58, 69, 80]},
+    {y:72.6, xs:[18.5, 30.5, 42.5, 54.5, 66.5, 78.5]},
+    {y:80.8,   xs:[17, 30, 43, 56, 69, 82]},
+    {y:88.5, xs:[15.5, 29, 42.5, 56, 69.5, 83]},
+    {y:42.4,   xs:[35, 45, 55, 65]},
   ];
   const toWorld = (x, y)=>({ x:(x - 50) * .088, z:(y - 71.5) * .145 });
   const SEATS = [];
   ROWS.forEach(r => r.xs.forEach(x => { const p = toWorld(x, r.y); SEATS.push({ ...p, taken:null }); }));
-  const SPOT3 = { x:0, z:-0.73 };                   // in front of the altar (50%, 66.5%)
+  const SPOT3 = { x:0, z:-1.03 };                    // in front of the altar (50%, 64.4%)
   const DOOR3 = { x:0, z:4.1 };                     // bottom-center entrance
 
   /* ---------- optional GLB character (Mixamo / VRoid export) ----------- */

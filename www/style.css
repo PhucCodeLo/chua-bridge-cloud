@@ -2,37 +2,37 @@
 :root{--gold:#f5c542;--gold2:#ffdf7e;--panel:rgba(24,11,2,.84)}
 html,body{height:100%}
 body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#fff;display:flex;justify-content:center}
-#phone{width:100%;max-width:460px;min-height:100dvh;display:flex;flex-direction:column;background:#170903}
+#phone{width:100%;max-width:460px;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;background:#170903}
 
 /* ---------- STAGE ---------- */
-#stage{position:relative;width:100%;aspect-ratio:5/8;max-height:86dvh;margin:0 auto;overflow:hidden;flex:none;background:#241003;touch-action:pan-y}
+#stage{position:relative;width:100%;aspect-ratio:9/16;max-height:100dvh;margin:0 auto;overflow:hidden;flex:none;background:#241003;touch-action:pan-y}
 #bgWrap{position:absolute;inset:-3% -4%;will-change:transform}
 #bgWrap img{position:absolute;left:0;width:100%;display:block;user-select:none;-webkit-user-drag:none}
-#bgTop{top:0;height:55%}
-#bgBot{top:55%;height:45%}
+#bgTop{top:0;height:48%}
+#bgBot{top:48%;height:52%}
 #rays{position:absolute;inset:0;background:linear-gradient(115deg,transparent 55%,rgba(255,214,130,.14) 68%,transparent 82%);
   mix-blend-mode:screen;animation:rayShift 9s ease-in-out infinite alternate;pointer-events:none}
 @keyframes rayShift{from{opacity:.5;transform:translateX(-2%)}to{opacity:1;transform:translateX(2%)}}
-#haloGlow{position:absolute;left:50%;top:36%;width:52%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+#haloGlow{position:absolute;left:50%;top:36.8%;width:52%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(circle,rgba(255,230,150,.5),rgba(255,190,60,.18) 55%,transparent 72%);pointer-events:none;animation:haloPulse 3.6s ease-in-out infinite}
 @keyframes haloPulse{0%,100%{opacity:.75;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
 #haloGlow.boom{animation:haloBoom 1.2s ease-out}
 @keyframes haloBoom{0%{box-shadow:0 0 0 0 rgba(255,220,110,.85)}100%{box-shadow:0 0 0 190px rgba(255,220,110,0)}}
-.candleGlow{position:absolute;top:62.8%;width:17%;aspect-ratio:2.1;transform:translate(-50%,-50%);border-radius:50%;
+.candleGlow{position:absolute;top:61.1%;width:17%;aspect-ratio:2.1;transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(ellipse,rgba(255,190,80,.55),transparent 70%);animation:flick 1.1s ease-in-out infinite alternate;pointer-events:none}
 #cgL{left:33%}#cgR{left:67%;animation-delay:.5s}
 @keyframes flick{from{opacity:.65}to{opacity:1}}
 .candleGlow.big{width:24%;background:radial-gradient(ellipse,rgba(255,205,100,.85),transparent 70%)}
-#burnerGlow{position:absolute;left:50%;top:50.5%;width:16%;aspect-ratio:1.6;transform:translate(-50%,-50%);border-radius:50%;
+#burnerGlow{position:absolute;left:50%;top:49.9%;width:16%;aspect-ratio:1.6;transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(ellipse,rgba(255,150,50,.4),transparent 70%);pointer-events:none;transition:opacity .4s;opacity:.7}
 #burnerGlow.big{opacity:1;background:radial-gradient(ellipse,rgba(255,170,60,.75),transparent 70%)}
-#smoke{position:absolute;left:50%;top:39.5%;width:14%;height:17%;transform:translateX(-50%);pointer-events:none;z-index:3}
+#smoke{position:absolute;left:50%;top:40%;width:14%;height:17%;transform:translateX(-50%);pointer-events:none;z-index:3}
 .puff{position:absolute;bottom:0;left:50%;width:34%;aspect-ratio:1;border-radius:50%;
   background:radial-gradient(circle,rgba(255,255,255,.8),rgba(255,255,255,0) 70%);animation:smokeUp 3.6s ease-out forwards}
 @keyframes smokeUp{to{transform:translate(calc(-50% + var(--drift,6px)),-150%) scale(2.9);opacity:0}}
 
 /* bell */
-#bell{position:absolute;left:88.5%;top:42%;transform:translateX(-50%);z-index:8;text-align:center;cursor:pointer;width:8.5%}
+#bell{position:absolute;left:88.5%;top:42.3%;transform:translateX(-50%);z-index:8;text-align:center;cursor:pointer;width:8.5%}
 #bell .bellBeam{height:6px;background:linear-gradient(180deg,#8a5a20,#5d3a0d);border-radius:3px;margin-bottom:1px}
 #bell .bellBody{font-size:clamp(24px,8.5vw,38px);display:inline-block;filter:drop-shadow(0 4px 7px rgba(0,0,0,.6));transform-origin:50% -12%}
 #bell.ring .bellBody{animation:bellSwing 1.7s ease-in-out}
@@ -91,7 +91,7 @@ body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sa
 @keyframes swimR{from{transform:translateX(0)}to{transform:translateX(580px)}}
 @keyframes ringWave{from{transform:translate(-50%,-50%) scale(.3);opacity:.9}to{transform:translate(-50%,-50%) scale(3.2);opacity:0}}
 .ringWave{border:2.5px solid rgba(255,220,110,.9);border-radius:50%;width:40px;height:40px;animation:ringWave 1.15s ease-out forwards}
-#dragon{position:absolute;top:16%;left:-70%;width:64%;z-index:13;opacity:0;pointer-events:none;filter:drop-shadow(0 0 14px rgba(255,200,50,.9))}
+#dragon{position:absolute;top:18.8%;left:-70%;width:64%;z-index:13;opacity:0;pointer-events:none;filter:drop-shadow(0 0 14px rgba(255,200,50,.9))}
 #dragon.fly{animation:dragonFly 3.4s ease-in-out forwards}
 @keyframes dragonFly{0%{left:-70%;top:22%;opacity:0}12%{opacity:1}55%{top:12%}100%{left:104%;top:18%;opacity:1}}
 
@@ -180,7 +180,7 @@ body.overlay #stage{max-height:none;height:100dvh;aspect-ratio:auto}
 
 /* ===== v1.0.0: camera world, couplets, deep prostration ===== */
 #world{position:absolute;inset:0;transform-origin:0 0;transition:transform 1.3s cubic-bezier(.65,.02,.23,1)}
-.couplet{position:absolute;top:15%;width:7.4%;min-width:27px;height:40%;z-index:6;writing-mode:vertical-rl;
+.couplet{position:absolute;top:17.9%;width:7.4%;min-width:27px;height:36%;z-index:6;writing-mode:vertical-rl;
   display:flex;align-items:center;justify-content:center;text-align:center;
   background:linear-gradient(180deg,#a31621,#7d0f18);color:#ffd94d;border:1px solid #caa25a;border-radius:6px;
   font-weight:800;font-size:clamp(10px,2.9vw,15px);letter-spacing:.22em;padding:10px 0;
