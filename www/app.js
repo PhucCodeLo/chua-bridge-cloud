@@ -335,6 +335,7 @@ const NARRATIONS = [
  {t:"Tĩnh lặng", x:"Giữa cuộc sống ồn ào, tĩnh lặng là một món quà quý giá. Tĩnh lặng không có nghĩa là trốn chạy cuộc đời, mà là trở về chăm sóc khu vườn trong tâm mình. Mỗi ngày, chỉ cần vài phút ngồi yên, nghe tiếng chuông, nghe hơi thở, ta sẽ thấy lòng mình lắng lại như nước trong hồ thu. Tâm tĩnh thì trí sáng, lòng an thì lời nói và việc làm cũng trở nên nhẹ nhàng. Mong bạn tìm được một góc tĩnh lặng cho riêng mình, để mỗi lần trở về, bạn lại đầy ắp năng lượng an lành."},
  {t:"Ngày mới an lành", x:"Mỗi buổi sớm mai là một khởi đầu mới mà cuộc đời trao tặng. Chuyện hôm qua, dù vui hay buồn, xin hãy để lại phía sau như sương tan trong nắng. Hôm nay, ta có thể mỉm cười nhiều hơn một chút, nói lời tử tế hơn một chút, và sống chậm lại một chút để kịp nhìn thấy những điều tốt đẹp quanh mình. Đừng chờ đến khi mọi thứ hoàn hảo mới cho phép mình hạnh phúc. Bình an không nằm ở cuối con đường. Bình an nằm trong từng bước chân ta đi, ngay lúc này, ngay tại đây."}
 ];
+let connUp = false;
 let narrOn = false, narrIdx = 0, lastNarrAt = Date.now() - 225000;  /* narrOn is set from LIVE_MODE below, where LIVE_MODE is declared */
 const narrState = { playing:false, chunks:[], idx:0, audio:null, timer:null, title:"", curChunk:"", browserSpeaking:false, resumeChunk:null, suppressAdvance:false, wd:null };
 window.__narrLog = [];
@@ -421,8 +422,9 @@ function narrSayBrowser(text, done){
      voice; if the phone has only one Vietnamese voice, deepen the pitch
      so the talk still sounds clearly different from the thanks */
   const alt = vs.find(v=>/minh|male/i.test(v.name)) || vs.find(v=>v !== vs[0]);
-  if(alt){ u.voice = alt; u.rate = 0.98; u.pitch = 0.9; }
-  else { if(vs[0]) u.voice = vs[0]; u.rate = 0.96; u.pitch = 0.72; }
+  let nvSet = {}; try{ nvSet = JSON.parse(localStorage.getItem("chua-narr-set") || "{}"); }catch(e){}
+  if(alt){ u.voice = alt; u.rate = nvSet.rate != null ? nvSet.rate : 0.98; u.pitch = nvSet.pitch != null ? nvSet.pitch : 0.9; }
+  else { if(vs[0]) u.voice = vs[0]; u.rate = nvSet.rate != null ? nvSet.rate : 0.96; u.pitch = nvSet.pitch != null ? nvSet.pitch : 0.72; }
   u.onend = u.onerror = done;
   speechSynthesis.speak(u);
 }
@@ -723,23 +725,16 @@ function handleGift(dev, gift, ptsOverride){
   else startPerform();
 }
 
-/* ---------- simulator UI ---------- */
-const menu = $("#giftMenuList"), grid = $("#giftGrid");
+/* ---------- stage gift menu (the control panels live on admin.html) ---------- */
+const menu = $("#giftMenuList");
 GIFTS.forEach(g=>{
   const m = document.createElement("div");
   m.className = "gm"; m.innerHTML = `<b>${g.icon} ${g.name}</b><span>${g.act}</span>`;
   m.addEventListener("click", ()=>handleGift(null, g)); menu.appendChild(m);
-  const b = document.createElement("button");
-  b.className = "giftBtn";
-  b.innerHTML = `<span class="gi">${g.icon}</span><span class="gn">${g.name}</span><span class="ga">${g.act}</span><span class="gp">+${g.pts} công đức</span>`;
-  b.addEventListener("click", ()=>handleGift(null, g)); grid.appendChild(b);
 });
 document.querySelectorAll(".tier").forEach(t=>{
   t.addEventListener("click", ()=>{ const g = GIFTS.find(x=>x.id===t.dataset.gift); if(g) handleGift(null, g); });
 });
-$("#btnJoin").addEventListener("click", ()=>{ const d = handleJoin(); if(d) ticker(`${d.name} vừa vào lễ 🙏`); });
-$("#btnChat").addEventListener("click", ()=>handleChat());
-$("#btnReset").addEventListener("click", ()=>location.reload());
 $("#bell").addEventListener("click", ()=>{ ringBell(false); ticker("Thỉnh chuông 🔔 — chuông chùa ngân vang"); });
 let autoTimer = null;
 function autoStep(){
@@ -750,13 +745,10 @@ function autoStep(){
     const g = w<.45?GIFTS[0]:w<.65?GIFTS[1]:w<.78?GIFTS[2]:w<.88?GIFTS[3]:w<.94?GIFTS[4]:w<.975?GIFTS[5]:w<.99?GIFTS[6]:GIFTS[7+Math.floor(Math.random()*2)];
     handleGift(null, g); }
 }
-const autoBtn = $("#btnAuto");
 function setAuto(on){
   clearInterval(autoTimer); autoTimer = null;
-  if(on){ autoTimer = setInterval(autoStep, 2400); autoBtn.textContent = "⏸️ Tự chạy demo"; autoBtn.classList.add("on"); }
-  else { autoBtn.textContent = "▶️ Tự chạy demo"; autoBtn.classList.remove("on"); }
+  if(on) autoTimer = setInterval(autoStep, 2400);
 }
-autoBtn.addEventListener("click", ()=>setAuto(!autoTimer));
 
 /* ---------- parallax drag (2.5D depth) ---------- */
 let parT = 0, par = 0, dragX = null;
@@ -814,7 +806,7 @@ async function connectEuler(){
   catch(e){ ticker("🔴 Không tạo được link nối Euler"); return; }
   const ws = new WebSocket(url); ws.binaryType = "arraybuffer";
   let opened = false;
-  ws.onopen = ()=>{ opened = true; ticker("🟢 Đã nối kênh sự kiện TikTok — chờ phòng live"); };
+  ws.onopen = ()=>{ opened = true; connUp = true; ticker("🟢 Đã nối kênh sự kiện TikTok — chờ phòng live"); };
   ws.onclose = ev=>{
     if(ev.code === 4404){ ticker("⏳ Chưa thấy phòng live — anh bấm LIVE là chùa tự bắt sóng"); setTimeout(connectEuler, 15000); }
     else if(ev.code === 4401 || ev.code === 4403){ eulerAuthFailed = true; ticker(`🔴 Euler từ chối key (mã ${ev.code}) — kênh WebSocket cần key riêng của Euler`); }
@@ -871,7 +863,7 @@ function connectTikTool(){
   const ws = new WebSocket(`wss://api.tik.tools?uniqueId=${encodeURIComponent(user)}&apiKey=${encodeURIComponent(key)}`);
   ttSocket = ws;
   let opened = false;
-  ws.onopen = ()=>{ opened = true; ttRetryMs = 0; ticker("🟢 Đã nối kênh sự kiện TikTok (TikTool) — chờ phòng live"); };
+  ws.onopen = ()=>{ opened = true; ttRetryMs = 0; connUp = true; ticker("🟢 Đã nối kênh sự kiện TikTok (TikTool) — chờ phòng live"); };
   ws.onclose = ev=>{
     ttSocket = null;
     if(ev.code === 4404){
@@ -938,7 +930,7 @@ function connectLive(){
                                          : `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
   let ws;
   try{ ws = new WebSocket(url); }catch(e){ setTimeout(connectLive, 3000); return; }
-  ws.onopen = ()=>ticker("🟢 Đã nối TikTok LIVE — chờ sen vào lễ");
+  ws.onopen = ()=>{ connUp = true; ticker("🟢 Đã nối TikTok LIVE — chờ sen vào lễ"); };
   ws.onclose = ()=>{ ticker("🔴 Mất nối cầu nối — đang tự nối lại…"); setTimeout(connectLive, 3000); };
   ws.onerror = ()=>{ try{ ws.close(); }catch(e){} };
   ws.onmessage = ev=>{
@@ -1039,26 +1031,10 @@ if(LIVE_MODE){
 }
 if(QS.has("overlay")) document.body.classList.add("overlay");
 
-/* ---------- TEST PANEL (?test=1): drive the live features by hand ----------
-   Avatar words, likes, hồi hướng wishes, seat expansion, verses — all the
-   things that normally only fire from real TikTok events. */
+/* ---------- test mode (?test=1): just stops the auto-demo;
+   hands-on controls now live on admin.html ---------- */
 const TEST_MODE = QS.has("test");
-if(TEST_MODE && $("#testPanel")){
-  $("#testPanel").style.display = "block";
-  setAuto(false);
-  const giftSel = $("#testGift");
-  GIFTS.forEach(g=>{ const o = document.createElement("option"); o.value = g.id; o.textContent = `${g.icon} ${g.name} (+${g.pts})`; giftSel.appendChild(o); });
-  giftSel.value = "hoasen";
-  const tName = ()=> ($("#testName").value || "Sen Test").trim().slice(0, 24) || "Sen Test";
-  $("#btnTestJoin").addEventListener("click", ()=>{ const d = findOrJoin(tName()); if(d) ticker(`${tName()} vừa vào lễ 🙏`); });
-  $("#btnTestChat").addEventListener("click", ()=>{ const t = $("#testChat").value.trim(); if(t) routeChat(tName(), t); });
-  $("#btnTestLike").addEventListener("click", ()=>{ if(findOrJoin(tName())) handleLike(tName()); });
-  $("#btnTestGift").addEventListener("click", ()=>{ const g = GIFTS.find(x=>x.id === giftSel.value); const d = findOrJoin(tName()); if(d && g) handleGift(d, g); });
-  $("#btnTestFill").addEventListener("click", ()=>{ for(let i=0;i<8;i++) handleJoin(); });
-  $("#btnTestVerse").addEventListener("click", ()=>showVerse());
-  $("#btnTestNarr").addEventListener("click", ()=>playNarration(true));
-  $("#btnTestBow").addEventListener("click", ()=>bowAll());
-}
+if(TEST_MODE) setAuto(false);
 
 /* Rotating couplet banners on the two pillars (verses change every 14s). */
 const COUPLETS = [["Đây là nơi thanh tịnh", "Vui lòng đi nhẹ nói khẽ"],
@@ -1071,3 +1047,57 @@ setInterval(()=>{ const L = $("#coupL"), R = $("#coupR"); if(!L || !R) return;
     L.textContent = COUPLETS[coupIdx][0]; R.textContent = COUPLETS[coupIdx][1];
     L.classList.remove("flip"); R.classList.remove("flip"); }, 620);
 }, 14000);
+
+/* ---------- admin.html link: the live page takes remote commands and
+   broadcasts its status (same-origin tabs: BroadcastChannel, with a
+   localStorage fallback for browsers without it) ---------- */
+const admBc = ("BroadcastChannel" in window) ? new BroadcastChannel("chua-admin") : null;
+let lastCmdId = 0;
+function admStatus(){
+  return { kind:"status", ts: Date.now(), ver: document.querySelector(".ver")?.textContent || "",
+    mode: LIVE_MODE ? (PHONE_MODE ? "📱 Live qua điện thoại" : "🔴 Đang LIVE") : (TEST_MODE ? "🧪 Test" : "🌐 Xem thường"),
+    connUp, count: devotees.filter(d=>!d.leaving).length,
+    devotees: devotees.filter(d=>!d.leaving).map(d=>({ name:d.name, type:d.type })),
+    congduc, board: [...boardMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5),
+    narrOn, narrPlaying: narrState.playing, narrTitle: narrState.title,
+    music: musicWanted, voice: voiceOn, auto: !!autoTimer };
+}
+function admSendStatus(){
+  const st = admStatus();
+  if(admBc) admBc.postMessage(st);
+  try{ localStorage.setItem("chua-status", JSON.stringify(st)); }catch(e){}
+}
+function admCmd(name, a){
+  a = a || {};
+  const nm = (a.name || "").trim().slice(0, 24);
+  if(name === "join"){ const d = nm ? findOrJoin(nm) : handleJoin(); if(d) ticker(`${d.name} vừa vào lễ 🙏`); }
+  else if(name === "chat"){ if(nm && a.text) routeChat(nm, String(a.text).slice(0, 120)); }
+  else if(name === "like"){ if(nm && findOrJoin(nm)) handleLike(nm); }
+  else if(name === "gift"){ const g = GIFTS.find(x=>x.id === a.giftId); const d = nm ? findOrJoin(nm) : null; if(g) handleGift(d, g); }
+  else if(name === "fill"){ const n = Math.min(a.n || 8, 40); for(let i=0;i<n;i++) handleJoin(); }
+  else if(name === "fillTo"){ const target = Math.min(a.n || 0, SEATS.length); let guard = 0; while(devotees.filter(d=>!d.leaving).length < target && guard++ < 120) handleJoin(); }
+  else if(name === "remove"){ const d = devotees.find(d=>d.name === nm); if(d) removeDev(d); }
+  else if(name === "clear") clearAllDevotees();
+  else if(name === "reset") location.reload();
+  else if(name === "verse") showVerse();
+  else if(name === "narrNow") playNarration(true);
+  else if(name === "narrStop") stopNarration();
+  else if(name === "narrSet"){ const on = !!a.on; if(on !== narrOn){ narrOn = on; $("#btnNarr")?.classList.toggle("off", !narrOn); if(!narrOn) stopNarration(); else playNarration(); } }
+  else if(name === "musicSet"){ if(!!a.on !== musicWanted) $("#btnMusic").click(); }
+  else if(name === "voiceSet"){ if(!!a.on !== voiceOn) $("#btnVoice").click(); }
+  else if(name === "autoSet") setAuto(!!a.on);
+  else if(name === "bell") ringBell(true);
+  else if(name === "bow") bowAll();
+  admSendStatus();
+}
+function admReceive(msg){
+  if(!msg) return;
+  if(msg.kind === "ping") admSendStatus();
+  else if(msg.kind === "cmd" && msg.id !== lastCmdId){ lastCmdId = msg.id; admCmd(msg.name, msg.args); }
+}
+if(admBc) admBc.onmessage = e=>admReceive(e.data);
+addEventListener("storage", e=>{
+  if(e.key === "chua-cmd" && e.newValue){ try{ admReceive(JSON.parse(e.newValue)); }catch(err){} }
+});
+setInterval(admSendStatus, 2500);
+admSendStatus();

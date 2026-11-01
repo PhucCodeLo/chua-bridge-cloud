@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bảng điều khiển · Chùa Online</title>
+<link rel="stylesheet" href="admin.css?v=1">
+</head>
+<body>
+<header id="aHead">
+  <div class="aTitle">🛕 BẢNG ĐIỀU KHIỂN LIVE — CHÙA ONLINE</div>
+  <div class="aHeadRight">
+    <span id="livePill" class="pill off">⚪ Chưa thấy trang live</span>
+    <button id="btnOpenLive" class="abtn gold">▶ Mở trang live</button>
+  </div>
+</header>
+<p class="aHint">Trang live chỉ còn sân khấu để phát/quay màn hình. Mở trang live ở một tab (hoặc cửa sổ) khác rồi dùng bảng này điều khiển — trên PC: để trang live trong LIVE Studio, bảng này mở bên cạnh. Lệnh chạy qua lại giữa hai tab trên cùng một trang web.</p>
+
+<main id="aGrid">
+  <section class="aCard">
+    <h3>📊 TRẠNG THÁI ĐIỆN</h3>
+    <div class="statGrid">
+      <div class="stat"><span>Chế độ</span><b id="stMode">—</b></div>
+      <div class="stat"><span>Phật tử</span><b id="stCount">—</b></div>
+      <div class="stat"><span>Công đức</span><b id="stMerit">—</b></div>
+      <div class="stat"><span>Kênh TikTok</span><b id="stConn">—</b></div>
+      <div class="stat wide"><span>Giảng pháp</span><b id="stNarr">—</b></div>
+    </div>
+    <h4>🏆 Bảng công đức</h4>
+    <ol id="boardList" class="aBoard"><li>—</li></ol>
+  </section>
+
+  <section class="aCard">
+    <h3>🎛️ ĐIỀU KHIỂN SÂN KHẤU</h3>
+    <div class="chipRow">
+      <button class="chip" id="chipMusic">🎵 Nhạc nền</button>
+      <button class="chip" id="chipVoice">🗣️ Giọng cảm ơn</button>
+      <button class="chip" id="chipNarr">📿 Giảng pháp</button>
+      <button class="chip" id="chipAuto">▶️ Tự chạy demo</button>
+    </div>
+    <div class="btnGrid">
+      <button class="abtn" id="btnNarrNow">🎙️ Giảng ngay</button>
+      <button class="abtn" id="btnNarrStop">⏹ Dừng giảng</button>
+      <button class="abtn" id="btnVerse">📜 Đọc lời kinh</button>
+      <button class="abtn" id="btnBell">🔔 Thỉnh chuông</button>
+      <button class="abtn" id="btnBow">🙇 Tất cả khấn vái</button>
+      <button class="abtn warn" id="btnReset">↺ Làm mới trang live</button>
+    </div>
+  </section>
+
+  <section class="aCard">
+    <h3>🧪 GIẢ LẬP NGƯỜI XEM</h3>
+    <div class="frow">
+      <input id="aName" value="Sen Test" maxlength="24" placeholder="Tên người xem">
+    </div>
+    <div class="frow">
+      <input id="aChat" maxlength="120" placeholder="Bình luận… gõ đúng 1 từ sư / nữ / nam / bà / tiểu / ni để đổi hình">
+      <button class="abtn" id="btnChat">💬 Gửi</button>
+    </div>
+    <div class="btnGrid">
+      <button class="abtn" id="btnJoin">🪑 Vào lễ</button>
+      <button class="abtn" id="btnLike">❤️ Thả tim</button>
+    </div>
+    <div class="frow">
+      <select id="aGift"></select>
+      <button class="abtn gold" id="btnGift">🎁 Tặng quà</button>
+    </div>
+    <div class="btnGrid">
+      <button class="abtn" id="btnFill8">👥 Thêm 8 người</button>
+      <button class="abtn" id="btnFill15">Đầy 15</button>
+      <button class="abtn" id="btnFill32">Đầy điện</button>
+    </div>
+    <p class="aNote">Mẹo: gõ một lời nguyện vào ô bình luận rồi Gửi, sau đó tặng quà từ 20 công đức — lời cảm ơn sẽ hồi hướng đúng lời nguyện đó.</p>
+  </section>
+
+  <section class="aCard">
+    <h3>👥 PHẬT TỬ TRONG ĐIỆN</h3>
+    <div id="devList" class="devList"><p class="aNote">—</p></div>
+    <button class="abtn warn" id="btnClear">🧹 Làm trống điện</button>
+  </section>
+
+  <section class="aCard">
+    <h3>🎙️ GIỌNG GIẢNG (khi phát bằng giọng điện thoại)</h3>
+    <label class="slider">Độ trầm (pitch): <b id="pitchVal">0.72</b>
+      <input type="range" id="rgPitch" min="0.5" max="1.1" step="0.01" value="0.72">
+    </label>
+    <label class="slider">Tốc độ đọc: <b id="rateVal">0.96</b>
+      <input type="range" id="rgRate" min="0.85" max="1.05" step="0.01" value="0.96">
+    </label>
+    <div class="btnGrid">
+      <button class="abtn" id="btnTryVoice">🔊 Nghe thử giọng</button>
+      <button class="abtn" id="btnVoiceDefault">↩ Mặc định</button>
+    </div>
+    <p class="aNote">Trang live tự ưu tiên giọng nam/giọng khác giọng cảm ơn nếu điện thoại có; chỉ có một giọng thì dùng độ trầm này để phân biệt. Giọng nam thật (NamMinh) có khi phát qua cầu nối PC/mây. Chỉnh ở đây áp dụng ngay cho các đoạn giảng tiếp theo.</p>
+  </section>
+</main>
+
+<footer class="aFoot">Chùa Online · bảng điều khiển — trang live và bảng này phải mở trên cùng một thiết bị/trình duyệt để nói chuyện với nhau.</footer>
+<script src="admin.js?v=1"></script>
+</body>
+</html>
