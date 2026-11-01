@@ -250,12 +250,20 @@ function pumpSpeech(){
   const vs = speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith("vi"));
   if(vs.length) u.voice = vs[0];
   speaking = true;
-  u.onend = u.onerror = ()=>{ speaking = false; pumpSpeech(); };
+  u.onend = u.onerror = ()=>{ speaking = false; pumpSpeech(); resumeNarration(); };
   speechSynthesis.speak(u);
 }
 if("speechSynthesis" in window) speechSynthesis.getVoices();
 function speakBrowser(text){
   if(!("speechSynthesis" in window)) return;
+  /* a phone has ONE speech queue, so a thank-you cannot overlap the talk:
+     cut the current chunk, say the thanks right away, then the talk
+     resumes by replaying the interrupted chunk (see resumeNarration) */
+  if(narrState.playing && narrState.browserSpeaking && !speaking && narrState.curChunk){
+    narrState.resumeChunk = narrState.curChunk;
+    narrState.suppressAdvance = true;
+    try{ speechSynthesis.cancel(); }catch(e){}
+  }
   speechQ.push(text);
   while(speechQ.length > 2) speechQ.shift();
   pumpSpeech();
@@ -328,11 +336,11 @@ const NARRATIONS = [
  {t:"Ngày mới an lành", x:"Mỗi buổi sớm mai là một khởi đầu mới mà cuộc đời trao tặng. Chuyện hôm qua, dù vui hay buồn, xin hãy để lại phía sau như sương tan trong nắng. Hôm nay, ta có thể mỉm cười nhiều hơn một chút, nói lời tử tế hơn một chút, và sống chậm lại một chút để kịp nhìn thấy những điều tốt đẹp quanh mình. Đừng chờ đến khi mọi thứ hoàn hảo mới cho phép mình hạnh phúc. Bình an không nằm ở cuối con đường. Bình an nằm trong từng bước chân ta đi, ngay lúc này, ngay tại đây."}
 ];
 let narrOn = false, narrIdx = 0, lastNarrAt = Date.now() - 225000;  /* narrOn is set from LIVE_MODE below, where LIVE_MODE is declared */
-const narrState = { playing:false, chunks:[], idx:0, audio:null, timer:null, title:"" };
+const narrState = { playing:false, chunks:[], idx:0, audio:null, timer:null, title:"", curChunk:"", browserSpeaking:false, resumeChunk:null, suppressAdvance:false, wd:null };
 window.__narrLog = [];
 function narrChunks(text){
   const sents = text.split(/(?<=[.!?…])\s+/); const out = []; let cur = "";
-  for(const t of sents){ if((cur + " " + t).trim().length > 200 && cur){ out.push(cur.trim()); cur = t; } else cur = cur ? cur + " " + t : t; }
+  for(const t of sents){ if((cur + " " + t).trim().length > 110 && cur){ out.push(cur.trim()); cur = t; } else cur = cur ? cur + " " + t : t; }
   if(cur.trim()) out.push(cur.trim()); return out;
 }
 function duckMusic(on){
@@ -351,6 +359,31 @@ function narrUi(){
     ? `🎙️ Đang giảng: ${narrState.title} · câu ${Math.min(narrState.idx + 1, narrState.chunks.length)}/${narrState.chunks.length}${narrDucked ? " · đang nhỏ tiếng (có lời cảm ơn)" : ""}`
     : "🎙️ Giảng pháp: đang nghỉ";
 }
+function chunkAdvancer(){
+  let done = false;
+  return ()=>{
+    if(done) return; done = true;
+    clearTimeout(narrState.wd);
+    narrState.browserSpeaking = false; narrState.audio = null;
+    if(narrState.suppressAdvance){
+      narrState.suppressAdvance = false;
+      /* the talk was cut by a thank-you: replay the chunk once the thanks
+         end (pumpSpeech calls resumeNarration); this timer is the fallback */
+      narrState.timer = setTimeout(()=>resumeNarration(), 12000);
+      return;
+    }
+    narrState.timer = setTimeout(narrPump, 350);
+  };
+}
+function resumeNarration(){
+  if(narrState.resumeChunk && narrState.playing && voiceOn){
+    const c = narrState.resumeChunk; narrState.resumeChunk = null;
+    clearTimeout(narrState.timer);
+    const adv = chunkAdvancer();
+    narrSayBrowser(c, adv);
+    narrState.wd = setTimeout(adv, 5000 + c.length * 95);
+  }
+}
 function playNarration(force){
   if(narrState.playing || !voiceOn) return;
   if(!narrOn && !force) return;
@@ -365,10 +398,10 @@ function narrPump(){
   if(narrState.idx >= narrState.chunks.length){ stopNarration(true); return; }
   if(ttsPlaying || speaking){ narrState.timer = setTimeout(narrPump, 700); return; }
   const chunk = narrState.chunks[narrState.idx++];
+  narrState.curChunk = chunk;
   narrUi();
-  let advanced = false, wd = null;
-  const advance = ()=>{ if(advanced) return; advanced = true; clearTimeout(wd); narrState.audio = null; narrState.timer = setTimeout(narrPump, 350); };
-  wd = setTimeout(advance, 5000 + chunk.length * 95);
+  const advance = chunkAdvancer();
+  narrState.wd = setTimeout(advance, 5000 + chunk.length * 95);
   if(LIVE_MODE && !PHONE_MODE){
     const a = new Audio("/tts?voice=male&text=" + encodeURIComponent(chunk));
     a.volume = narrDucked ? 0.22 : 1;
@@ -380,18 +413,24 @@ function narrPump(){
 }
 function narrSayBrowser(text, done){
   if(!("speechSynthesis" in window)){ done(); return; }
+  narrState.browserSpeaking = true;
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = "vi-VN"; u.rate = 1.0; u.pitch = 1.02;
+  u.lang = "vi-VN";
   const vs = speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith("vi"));
-  const male = vs.find(v=>/minh|male/i.test(v.name)) || vs[1] || vs[0];
-  if(male) u.voice = male;
+  /* thanks use vs[0]; the talk prefers a male-named voice, else any OTHER
+     voice; if the phone has only one Vietnamese voice, deepen the pitch
+     so the talk still sounds clearly different from the thanks */
+  const alt = vs.find(v=>/minh|male/i.test(v.name)) || vs.find(v=>v !== vs[0]);
+  if(alt){ u.voice = alt; u.rate = 0.98; u.pitch = 0.9; }
+  else { if(vs[0]) u.voice = vs[0]; u.rate = 0.96; u.pitch = 0.72; }
   u.onend = u.onerror = done;
   speechSynthesis.speak(u);
 }
 function stopNarration(finished){
   const wasPlaying = narrState.playing;
   narrState.playing = false; narrState.chunks = []; narrState.idx = 0;
-  clearTimeout(narrState.timer);
+  narrState.resumeChunk = null; narrState.suppressAdvance = false; narrState.browserSpeaking = false;
+  clearTimeout(narrState.timer); clearTimeout(narrState.wd);
   if(narrState.audio){ try{ narrState.audio.pause(); }catch(e){} narrState.audio = null; }
   duckMusic(false); duckNarration(false);
   lastNarrAt = Date.now();
