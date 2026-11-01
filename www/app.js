@@ -26,24 +26,23 @@ const GIFTS = [
   {id:"thienha",icon:"🌌", name:"Thiên hà",     act:"Rồng Vàng hộ pháp",   pts:1199,fx:"dragon"},
 ];
 /* anchors (% of stage) measured on the backdrop art */
-const A = { buddha:{x:50,y:11}, burner:{x:50,y:40}, smoke:{x:50,y:33},
-            candleL:{x:44,y:20}, candleR:{x:56,y:20},
-            fruitL:{x:46,y:25}, fruitR:{x:54,y:25}, vaseL:{x:36,y:14}, vaseR:{x:64,y:14},
-            bell:{x:88.5,y:31} };
+const A = { buddha:{x:50,y:29}, burner:{x:50,y:51}, smoke:{x:50,y:45},
+            candleL:{x:43,y:49.5}, candleR:{x:57,y:49.5},
+            fruitL:{x:37.5,y:51.5}, fruitR:{x:62.5,y:51.5}, vaseL:{x:32,y:44}, vaseR:{x:68,y:44},
+            bell:{x:88.5,y:44} };
 /* seats: rows back->front {feetY %, width %, xs[]}. Back rows spread wider
    (8 across) and the front row keeps only 4 large figures flanking the
    carpet — the hall reads wide instead of two bunched columns. */
 const ROWS = [
-  {y:47,   w:8,    z:3, xs:[29, 39, 61, 71]},
-  {y:56,   w:9,    z:4, xs:[24, 34.5, 65.5, 76]},
-  {y:67.5, w:10.5, z:5, xs:[20, 31, 42, 58, 69, 80]},
-  {y:75.5, w:12,   z:6, xs:[18.5, 30.5, 42.5, 54.5, 66.5, 78.5]},
-  {y:85,   w:14,   z:7, xs:[17, 30, 43, 56, 69, 82]},
-  {y:93.5, w:15.5, z:8, xs:[15.5, 29, 42.5, 56, 69.5, 83]},
+  {y:69,   w:7,    z:3, xs:[24, 33, 41.5, 58.5, 67, 76]},
+  {y:75,   w:8.5,  z:4, xs:[21.5, 31.5, 41, 59, 68.5, 78.5]},
+  {y:81.5, w:10,   z:5, xs:[19, 30, 41, 59, 70, 81]},
+  {y:88,   w:11.5, z:6, xs:[17, 29, 41, 59, 71, 83]},
+  {y:94.5, w:13,   z:7, xs:[15.5, 28, 41.5, 58.5, 72, 84.5]},
 ];
 const SEATS = [];
 ROWS.forEach(r=>{ r.xs.forEach(x=>SEATS.push({x, y:r.y, w:r.w, z:r.z, taken:null})); });
-const SPOT = {x:50, y:54, w:15.5};
+const SPOT = {x:50, y:66.5, w:12};
 
 let devotees = [], congduc = 0; const boardMap = new Map(), usedNames = new Set();
 /* Avatar types: comment one word (nam / nữ / sư / ni / bà / tiểu / cao tăng)
@@ -373,7 +372,8 @@ function makeDev(name, seat, instant){
   el.addEventListener("click", e=>{ e.stopPropagation(); bow(dev); say(dev, "Mô Phật 🙏"); sndPop(); });
   if(!instant){
     el.classList.add("walking");
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.left = seat.x+"%"; el.style.top = seat.y+"%"; }));
+    el.style.width = (seat.w * 1.45) + "%";
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.left = seat.x+"%"; el.style.top = seat.y+"%"; el.style.width = seat.w+"%"; }));
     setTimeout(()=>{ el.classList.remove("walking"); renderFig(dev); bow(dev); }, 1750);
   }
   updateTop(); return dev;
@@ -431,7 +431,7 @@ function removeDev(dev){
   if(!dev || dev.leaving) return;
   dev.leaving = true; dev.seat.taken = null;
   dev.el.classList.add("walking"); renderFig(dev);
-  dev.el.style.left = "50%"; dev.el.style.top = "109%";
+  dev.el.style.left = "50%"; dev.el.style.top = "109%"; dev.el.style.width = (dev.home.w * 1.45) + "%";
   setTimeout(()=>{ dev.el.style.transition = "opacity .45s ease"; dev.el.style.opacity = "0"; }, 1350);
   setTimeout(()=>{ dev.el.remove(); devotees = devotees.filter(d=>d !== dev); updateTop(); }, 1850);
   updateTop();
@@ -478,7 +478,7 @@ function handleJoin(name){
   let seat = SEATS.find(s=>!s.taken);
   if(!seat && SEATS.length < 36){
     /* hall expansion: one extra back row (26 -> 34 seats) before anyone is evicted */
-    [25,33,67,75].forEach(x=>SEATS.push({x, y:41, w:7, z:2, taken:null}));
+    [18.5,81.5].forEach(x=>SEATS.push({x, y:65.5, w:6.5, z:2, taken:null}));
     seat = SEATS.find(s=>!s.taken);
     if(seat) ticker("Chùa mở thêm hàng ghế phía sau — mời các sen vào lễ 🙏");
   }

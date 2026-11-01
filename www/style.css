@@ -23,16 +23,16 @@ body{background:#120802;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sa
 #cgL{left:33%}#cgR{left:67%;animation-delay:.5s}
 @keyframes flick{from{opacity:.65}to{opacity:1}}
 .candleGlow.big{width:24%;background:radial-gradient(ellipse,rgba(255,205,100,.85),transparent 70%)}
-#burnerGlow{position:absolute;left:50%;top:40%;width:16%;aspect-ratio:1.6;transform:translate(-50%,-50%);border-radius:50%;
+#burnerGlow{position:absolute;left:50%;top:50.5%;width:16%;aspect-ratio:1.6;transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(ellipse,rgba(255,150,50,.4),transparent 70%);pointer-events:none;transition:opacity .4s;opacity:.7}
 #burnerGlow.big{opacity:1;background:radial-gradient(ellipse,rgba(255,170,60,.75),transparent 70%)}
-#smoke{position:absolute;left:50%;top:28.5%;width:14%;height:17%;transform:translateX(-50%);pointer-events:none;z-index:3}
+#smoke{position:absolute;left:50%;top:39.5%;width:14%;height:17%;transform:translateX(-50%);pointer-events:none;z-index:3}
 .puff{position:absolute;bottom:0;left:50%;width:34%;aspect-ratio:1;border-radius:50%;
   background:radial-gradient(circle,rgba(255,255,255,.8),rgba(255,255,255,0) 70%);animation:smokeUp 3.6s ease-out forwards}
 @keyframes smokeUp{to{transform:translate(calc(-50% + var(--drift,6px)),-150%) scale(2.9);opacity:0}}
 
 /* bell */
-#bell{position:absolute;left:88.5%;top:29%;transform:translateX(-50%);z-index:8;text-align:center;cursor:pointer;width:11%}
+#bell{position:absolute;left:88.5%;top:42%;transform:translateX(-50%);z-index:8;text-align:center;cursor:pointer;width:11%}
 #bell .bellBeam{height:6px;background:linear-gradient(180deg,#8a5a20,#5d3a0d);border-radius:3px;margin-bottom:1px}
 #bell .bellBody{font-size:clamp(24px,8.5vw,38px);display:inline-block;filter:drop-shadow(0 4px 7px rgba(0,0,0,.6));transform-origin:50% -12%}
 #bell.ring .bellBody{animation:bellSwing 1.7s ease-in-out}
@@ -180,12 +180,12 @@ body.overlay #stage{max-height:none;height:100dvh;aspect-ratio:auto}
 
 /* ===== v1.0.0: camera world, couplets, deep prostration ===== */
 #world{position:absolute;inset:0;transform-origin:0 0;transition:transform 1.3s cubic-bezier(.65,.02,.23,1)}
-.couplet{position:absolute;top:15%;width:7.4%;min-width:27px;height:46%;z-index:6;writing-mode:vertical-rl;
+.couplet{position:absolute;top:15%;width:7.4%;min-width:27px;height:40%;z-index:6;writing-mode:vertical-rl;
   display:flex;align-items:center;justify-content:center;text-align:center;
   background:linear-gradient(180deg,#a31621,#7d0f18);color:#ffd94d;border:1px solid #caa25a;border-radius:6px;
   font-weight:800;font-size:clamp(10px,2.9vw,15px);letter-spacing:.22em;padding:10px 0;
   box-shadow:0 4px 14px rgba(0,0,0,.5), inset 0 0 12px rgba(0,0,0,.35);transition:opacity .6s, transform .6s}
-.couplet.left{left:1.3%}.couplet.right{right:1.3%}
+.couplet.left{left:21%}.couplet.right{right:21%}
 .couplet.flip{opacity:0;transform:scaleX(.55)}
 .dev.prostrate .fig{animation:prostrate 1.9s ease-in-out 2 !important}
 @keyframes prostrate{0%,100%{transform:translateY(0) scale(1,1)}

@@ -91,7 +91,7 @@ async function init(){
   const toWorld = (x, y)=>({ x:(x - 50) * .088, z:(y - 71.5) * .145 });
   const SEATS = [];
   ROWS.forEach(r => r.xs.forEach(x => { const p = toWorld(x, r.y); SEATS.push({ ...p, taken:null }); }));
-  const SPOT3 = { x:0, z:-2.54 };                   // in front of the burner (50%, 54%)
+  const SPOT3 = { x:0, z:-0.73 };                   // in front of the altar (50%, 66.5%)
   const DOOR3 = { x:0, z:4.1 };                     // bottom-center entrance
 
   /* ---------- optional GLB character (Mixamo / VRoid export) ----------- */
